@@ -1,4 +1,4 @@
-# MOMA Compiler Playground
+# Mini Compiler Project
 
 A mini compiler project for a small language, with an interactive web interface.
 
