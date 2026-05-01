@@ -15,7 +15,7 @@ This project parses and validates multi-statement programs:
 - Variable declarations (e.g., `int x;`, `string name;`)
 - Assignments (e.g., `x = 10;`, `name = "yassine";`)
 - `+`, `-`, `*`, `>` expressions with type consistency checks
-- Support for `if`, `then`, `else` keywords and braces structure.
+- Support for `if` / `else` blocks with braces and parenthesized conditions.
 
 The web app (`start.py` + `index.html`) visualizes each stage and keeps a session symbol table.
 
@@ -24,18 +24,23 @@ The web app (`start.py` + `index.html`) visualizes each stage and keeps a sessio
 ## Language Grammar
 
 ```text
-stmt   → decl | assign
+program → stmt*
 
-decl   → TYPE ID ';'
+stmt    → decl | assign | if_stmt
 
-assign → ID '=' expr ';'
+decl    → TYPE ID ';'
 
-expr   → term expr'
-expr'  → '+' term expr' | ε
+assign  → ID '=' expr ';'
 
-term   → ID | NUM | STRING
+if_stmt → 'if' '(' expr ')' '{' stmt* '}' ( 'else' '{' stmt* '}' )?
 
-TYPE   → 'int' | 'string'
+expr    → term (OP term)*
+
+term    → ID | NUM | STRING
+
+OP      → '+' | '-' | '*' | '>'
+
+TYPE    → 'int' | 'string'
 ```
 
 ---
@@ -50,7 +55,7 @@ TYPE   → 'int' | 'string'
   - Checks declaration-before-use.
   - Checks duplicate declarations.
   - Checks assignment type compatibility.
-  - Checks operand type compatibility for `+`.
+  - Checks operand type compatibility for binary ops (`+`, `-`, `*`, `>`).
 - **Web Playground**
   - Runs analysis through `/api/run`.
   - Supports symbol-table reset via `/api/reset`.

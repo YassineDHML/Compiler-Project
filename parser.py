@@ -102,6 +102,8 @@ class Parser:
     # stmt → decl | assign | if_stmt
     def stmt(self):
         tok = self.current()
+        if tok is None:
+            raise SyntaxError("Unexpected end of input")
         if tok.type == 'KEYWORD' and tok.value in ('int', 'string'):
             return self.decl()
         elif tok.type == 'ID':
@@ -109,7 +111,7 @@ class Parser:
         elif tok.type == 'KEYWORD' and tok.value == 'if':
             return self.if_stmt()
         else:
-            raise SyntaxError("Invalid statement")
+            raise SyntaxError(f"Invalid statement starting with {tok}")
 
     # if_stmt → 'if' '(' expr ')' '{' stmt* '}' ( 'else' '{' stmt* '}' )?
     def if_stmt(self):
@@ -135,15 +137,6 @@ class Parser:
             
         return IfStmt(cond, body, else_body)
 
-    # stmt → decl | assign
-    def stmt(self):
-        tok = self.current()
-        if tok.type == 'KEYWORD' and tok.value in ('int', 'string'):
-            return self.decl()
-        elif tok.type == 'ID':
-            return self.assign()
-        else:
-            raise SyntaxError("Invalid statement")
 
     # decl → TYPE ID ';'
     def decl(self):
