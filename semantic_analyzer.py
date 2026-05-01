@@ -114,13 +114,13 @@ if __name__ == '__main__':
         # (source,                         expect_error)
         ("int x;",                          False),
         ("string name;",                    False),
-        ("x = 5;",                          False),
-        ("x = 5 + 2;",                      False),
-        ('name = "alice";',                 False),
-        ('name = "hello" + " world";',      False),
-        ("y = 10;",                         True),   # undeclared variable
-        ('x = "hello";',                    True),   # int <- string
-        ("name = 42;",                      True),   # string <- int
+        ("x = 10;",                          False),
+        ("x = 7 + 77;",                      False),
+        ('name = "sahbi";',                 False),
+        ('name = "yassine" + "sahbi";',      False),
+        ("y = 17;",                         True),   # undeclared variable
+        ('x = "takoua";',                    True),   # int <- string
+        ("name = 13;",                      True),   # string <- int
         ('x = 1 + "oops";',                 True),   # int + string in BinOp
     ]
 

@@ -1,0 +1,1424 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Compiler Playground</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600&display=swap"
+        rel="stylesheet" />
+    <style>
+        :root {
+            --bg: #060709;
+            --surface: #0c0e12;
+            --surface2: #12151b;
+            --surface3: #181c24;
+            --border: rgba(255, 255, 255, 0.055);
+            --border2: rgba(255, 255, 255, 0.11);
+            --border3: rgba(255, 255, 255, 0.18);
+            --text: #e6eaf2;
+            --text2: #9aa0b0;
+            --muted: #525a6e;
+            --dim: #272e3d;
+            --lime: #b4ff50;
+            --lime-lo: rgba(180, 255, 80, 0.08);
+            --lime-md: rgba(180, 255, 80, 0.15);
+            --green: #3de89a;
+            --green-lo: rgba(61, 232, 154, 0.09);
+            --red: #ff5f5f;
+            --red-lo: rgba(255, 95, 95, 0.09);
+            --amber: #ffb547;
+            --amber-lo: rgba(255, 181, 71, 0.09);
+            --blue: #6ca8ff;
+            --blue-lo: rgba(108, 168, 255, 0.09);
+            --pink: #d97bff;
+            --pink-lo: rgba(217, 123, 255, 0.09);
+            --teal: #00d4cc;
+            --teal-lo: rgba(0, 212, 204, 0.09);
+            --mono: 'JetBrains Mono', monospace;
+            --sans: 'Syne', sans-serif;
+            --r: 8px;
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            height: 100%;
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--sans);
+            overflow: hidden;
+        }
+
+        /* ─────────────────── GRID ─────────────────── */
+        .app {
+            display: grid;
+            grid-template-rows: 52px 1fr;
+            height: 100vh;
+        }
+
+        .main {
+            display: grid;
+            grid-template-columns: 360px minmax(0, 1fr);
+            overflow: hidden;
+        }
+
+        /* ─────────────────── TOPBAR ─────────────────── */
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 22px;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface);
+            position: relative;
+            z-index: 10;
+        }
+
+        .topbar::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, var(--lime) 0%, transparent 60%);
+            opacity: 0.3;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-mark {
+            width: 28px;
+            height: 28px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .brand-mark svg {
+            width: 28px;
+            height: 28px;
+        }
+
+        .brand-text {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+        }
+
+        .brand-name {
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+            color: var(--text);
+        }
+
+        .brand-pipe {
+            font-family: var(--mono);
+            font-size: 9.5px;
+            font-weight: 300;
+            color: var(--muted);
+            letter-spacing: 0.06em;
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-pill {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-family: var(--mono);
+            font-size: 10px;
+            font-weight: 400;
+            padding: 4px 10px 4px 8px;
+            border-radius: 20px;
+            border: 1px solid var(--border2);
+            color: var(--muted);
+            background: var(--surface2);
+            transition: all .2s;
+        }
+
+        .status-pill .dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: var(--muted);
+            flex-shrink: 0;
+        }
+
+        .status-pill.ok {
+            border-color: rgba(61, 232, 154, .25);
+            color: var(--green);
+            background: var(--green-lo);
+        }
+
+        .status-pill.ok .dot {
+            background: var(--green);
+            box-shadow: 0 0 4px var(--green);
+        }
+
+        .status-pill.err {
+            border-color: rgba(255, 95, 95, .25);
+            color: var(--red);
+            background: var(--red-lo);
+        }
+
+        .status-pill.err .dot {
+            background: var(--red);
+        }
+
+        .kbd-hint {
+            font-family: var(--mono);
+            font-size: 10px;
+            color: var(--muted);
+            opacity: 0.6;
+        }
+
+        /* ─────────────────── LEFT PANEL ─────────────────── */
+        .left {
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--border);
+            background: var(--surface);
+            overflow: hidden;
+        }
+
+        .panel-label {
+            padding: 10px 16px 9px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .panel-label-text {
+            font-size: 9.5px;
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        .panel-label-badge {
+            font-family: var(--mono);
+            font-size: 9px;
+            padding: 1px 6px;
+            border: 1px solid var(--border2);
+            border-radius: 3px;
+            color: var(--muted);
+        }
+
+        /* ── editor ── */
+        .editor-wrap {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+            min-height: 0;
+        }
+
+        .gutter {
+            width: 40px;
+            flex-shrink: 0;
+            padding: 13px 0 13px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .ln {
+            font-family: var(--mono);
+            font-size: 11px;
+            font-weight: 300;
+            color: var(--dim);
+            line-height: 20px;
+            height: 20px;
+            padding-right: 8px;
+        }
+
+        #src {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text);
+            font-family: var(--mono);
+            font-size: 12.5px;
+            line-height: 20px;
+            padding: 13px 16px;
+            resize: none;
+            caret-color: var(--lime);
+            overflow-y: auto;
+        }
+
+        #src::selection {
+            background: var(--lime-md);
+        }
+
+        #src::placeholder {
+            color: var(--dim);
+        }
+
+        /* ── snippets ── */
+        .snips {
+            padding: 10px 14px 12px;
+            border-top: 1px solid var(--border);
+        }
+
+        .snips-header {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+
+        .snips-label {
+            font-size: 9.5px;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        .snips-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .snip {
+            font-family: var(--mono);
+            font-size: 10px;
+            padding: 3px 8px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text2);
+            cursor: pointer;
+            transition: all .12s;
+            letter-spacing: 0.02em;
+        }
+
+        .snip:hover {
+            border-color: var(--lime);
+            color: var(--lime);
+            background: var(--lime-lo);
+        }
+
+        .snip.err:hover {
+            border-color: var(--red);
+            color: var(--red);
+            background: var(--red-lo);
+        }
+
+        /* ── symbol table ── */
+        .sym-section {
+            border-top: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            max-height: 148px;
+        }
+
+        .sym-scroll {
+            overflow-y: auto;
+            padding: 8px 14px 10px;
+            flex: 1;
+        }
+
+        .sym-empty {
+            font-family: var(--mono);
+            font-size: 11px;
+            color: var(--dim);
+            font-style: italic;
+            padding: 4px 0;
+        }
+
+        .sym-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: var(--mono);
+            font-size: 11.5px;
+        }
+
+        .sym-table th {
+            font-size: 9px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--muted);
+            padding: 2px 6px 4px 0;
+            text-align: left;
+            font-weight: 500;
+            font-family: var(--sans);
+        }
+
+        .sym-table td {
+            padding: 3px 6px 3px 0;
+            border-top: 1px solid var(--border);
+        }
+
+        .sym-name {
+            color: var(--green);
+            font-weight: 500;
+        }
+
+        .sym-type-int {
+            color: var(--blue);
+        }
+
+        .sym-type-string {
+            color: var(--pink);
+        }
+
+        .sym-new {
+            animation: rowFlash .4s ease;
+        }
+
+        @keyframes rowFlash {
+            from {
+                background: rgba(180, 255, 80, .12);
+            }
+
+            to {
+                background: transparent;
+            }
+        }
+
+        /* ── actions ── */
+        .actions {
+            padding: 12px 14px 14px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-run {
+            flex: 1;
+            background: var(--lime);
+            color: var(--bg);
+            border: none;
+            border-radius: var(--r);
+            padding: 10px 16px;
+            font-family: var(--sans);
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all .15s;
+            letter-spacing: -0.01em;
+        }
+
+        .btn-run:hover {
+            filter: brightness(1.1);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(180, 255, 80, .2);
+        }
+
+        .btn-run:active {
+            transform: translateY(0);
+        }
+
+        .btn-run:disabled {
+            opacity: .45;
+            pointer-events: none;
+            box-shadow: none;
+        }
+
+        .btn-reset {
+            background: var(--surface2);
+            border: 1px solid var(--border2);
+            border-radius: var(--r);
+            padding: 10px 13px;
+            color: var(--muted);
+            font-family: var(--sans);
+            font-size: 12px;
+            cursor: pointer;
+            transition: all .12s;
+            font-weight: 500;
+        }
+
+        .btn-reset:hover {
+            border-color: var(--red);
+            color: var(--red);
+            background: var(--red-lo);
+        }
+
+        /* ─────────────────── RIGHT PANEL ─────────────────── */
+        .right {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background: var(--bg);
+        }
+
+        /* ── pipeline ── */
+        .pipeline-wrap {
+            padding: 14px 22px;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface);
+            display: flex;
+            align-items: center;
+            gap: 0;
+        }
+
+        .stage {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            padding: 7px 14px;
+            border-radius: 7px;
+            border: 1px solid var(--border);
+            transition: all .25s;
+            background: var(--surface2);
+            min-width: 110px;
+            position: relative;
+        }
+
+        .stage-num {
+            font-family: var(--mono);
+            font-size: 9px;
+            font-weight: 600;
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+            background: var(--dim);
+            color: var(--muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all .25s;
+        }
+
+        .stage-label {
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            color: var(--muted);
+            transition: color .25s;
+        }
+
+        .stage-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--dim);
+            margin-left: auto;
+            flex-shrink: 0;
+            transition: all .25s;
+        }
+
+        .stage.running {
+            border-color: rgba(255, 181, 71, .25);
+            background: var(--amber-lo);
+        }
+
+        .stage.running .stage-num {
+            background: rgba(255, 181, 71, .2);
+            color: var(--amber);
+        }
+
+        .stage.running .stage-label {
+            color: var(--amber);
+        }
+
+        .stage.running .stage-dot {
+            background: var(--amber);
+            animation: pulse .7s ease infinite alternate;
+        }
+
+        @keyframes pulse {
+            from {
+                box-shadow: none;
+            }
+
+            to {
+                box-shadow: 0 0 6px var(--amber);
+            }
+        }
+
+        .stage.ok {
+            border-color: rgba(61, 232, 154, .2);
+            background: var(--green-lo);
+        }
+
+        .stage.ok .stage-num {
+            background: rgba(61, 232, 154, .15);
+            color: var(--green);
+        }
+
+        .stage.ok .stage-label {
+            color: var(--green);
+        }
+
+        .stage.ok .stage-dot {
+            background: var(--green);
+        }
+
+        .stage.err {
+            border-color: rgba(255, 95, 95, .2);
+            background: var(--red-lo);
+        }
+
+        .stage.err .stage-num {
+            background: rgba(255, 95, 95, .15);
+            color: var(--red);
+        }
+
+        .stage.err .stage-label {
+            color: var(--red);
+        }
+
+        .stage.err .stage-dot {
+            background: var(--red);
+        }
+
+        .pipe-connector {
+            display: flex;
+            align-items: center;
+            margin: 0 4px;
+            flex-shrink: 0;
+        }
+
+        .pipe-connector svg {
+            display: block;
+        }
+
+        /* ── outputs ── */
+        .outputs {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+            padding: 14px 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .placeholder {
+            color: var(--muted);
+            font-family: var(--mono);
+            font-size: 11.5px;
+            line-height: 1.9;
+            padding: 28px 6px;
+        }
+
+        .placeholder .hl {
+            color: var(--lime);
+        }
+
+        .placeholder .dim {
+            color: var(--dim);
+        }
+
+        /* ── cards ── */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+            animation: riseIn .22s ease both;
+            flex-shrink: 0;
+        }
+
+        @keyframes riseIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card-head {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 14px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .card-stage-badge {
+            font-family: var(--mono);
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2px 7px;
+            border-radius: 4px;
+            border: 1px solid;
+            flex-shrink: 0;
+        }
+
+        .card-title {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.07em;
+            text-transform: uppercase;
+            flex: 1;
+        }
+
+        .card-tag {
+            font-family: var(--mono);
+            font-size: 9px;
+            color: var(--muted);
+            padding: 2px 7px;
+            border: 1px solid var(--border);
+            border-radius: 3px;
+        }
+
+        .card-body {
+            padding: 12px 14px;
+        }
+
+        /* ── token chips ── */
+        .tok-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        .tok {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            border-radius: 5px;
+            overflow: hidden;
+            border: 1px solid var(--border2);
+            font-family: var(--mono);
+            font-size: 9.5px;
+            animation: chipIn .1s ease both;
+        }
+
+        @keyframes chipIn {
+            from {
+                opacity: 0;
+                transform: scale(.9);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .tok .tt {
+            padding: 2px 8px;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+        }
+
+        .tok .tv {
+            padding: 2px 8px;
+            background: var(--surface2);
+            border-top: 1px solid var(--border);
+            color: var(--text2);
+        }
+
+        .tt.KEYWORD {
+            background: rgba(108, 168, 255, .12);
+            color: var(--blue);
+        }
+
+        .tt.ID {
+            background: rgba(61, 232, 154, .1);
+            color: var(--green);
+        }
+
+        .tt.NUM {
+            background: rgba(255, 181, 71, .1);
+            color: var(--amber);
+        }
+
+        .tt.STRING {
+            background: rgba(217, 123, 255, .1);
+            color: var(--pink);
+        }
+
+        .tt.OP {
+            background: rgba(180, 255, 80, .1);
+            color: var(--lime);
+        }
+
+        .tt.SEMI,
+        .tt.LPAREN,
+        .tt.RPAREN,
+        .tt.LBRACE,
+        .tt.RBRACE {
+            background: rgba(255, 255, 255, .03);
+            color: var(--muted);
+        }
+
+        /* ── AST ── */
+        .ast-tree {
+            font-family: var(--mono);
+            font-size: 11.5px;
+            line-height: 1.75;
+            color: var(--text);
+            max-height: 230px;
+            overflow: auto;
+        }
+
+        .ast-kind {
+            color: #c084fc;
+            font-weight: 600;
+        }
+
+        .ast-key {
+            color: var(--muted);
+        }
+
+        .ast-val-str {
+            color: var(--pink);
+        }
+
+        .ast-val-num {
+            color: var(--amber);
+        }
+
+        .ast-val-id {
+            color: var(--green);
+        }
+
+        .ast-val-type {
+            color: var(--blue);
+        }
+
+        .ast-branch {
+            padding-left: 16px;
+            border-left: 1px solid var(--border2);
+            margin-left: 5px;
+        }
+
+        /* ── semantic result ── */
+        .sem-result {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .type-chip {
+            font-family: var(--mono);
+            font-size: 13px;
+            font-weight: 600;
+            padding: 6px 14px;
+            border-radius: 5px;
+            border: 1px solid;
+        }
+
+        .type-chip.int {
+            background: var(--blue-lo);
+            color: var(--blue);
+            border-color: rgba(108, 168, 255, .25);
+        }
+
+        .type-chip.string {
+            background: var(--pink-lo);
+            color: var(--pink);
+            border-color: rgba(217, 123, 255, .25);
+        }
+
+        .ok-bar {
+            flex: 1;
+            padding: 8px 12px;
+            border-radius: 6px;
+            background: var(--green-lo);
+            border: 1px solid rgba(61, 232, 154, .2);
+            font-family: var(--mono);
+            font-size: 11.5px;
+            color: var(--green);
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+
+        .ok-bar::before {
+            content: '';
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: var(--green);
+            flex-shrink: 0;
+        }
+
+        .err-block {
+            padding: 10px 14px;
+            border-radius: 6px;
+            background: var(--red-lo);
+            border: 1px solid rgba(255, 95, 95, .2);
+            font-family: var(--mono);
+            font-size: 11.5px;
+            color: var(--red);
+            line-height: 1.65;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .err-block::before {
+            content: '✕';
+            flex-shrink: 0;
+            font-size: 10px;
+            margin-top: 1px;
+            opacity: 0.7;
+        }
+
+        /* ── statusbar ── */
+        .statusbar {
+            padding: 7px 22px;
+            border-top: 1px solid var(--border);
+            background: var(--surface);
+            font-family: var(--mono);
+            font-size: 10.5px;
+            color: var(--muted);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sb-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: var(--dim);
+            flex-shrink: 0;
+            transition: all .3s;
+        }
+
+        .sb-dot.ok {
+            background: var(--green);
+            box-shadow: 0 0 4px var(--green);
+        }
+
+        .sb-dot.err {
+            background: var(--red);
+            box-shadow: 0 0 4px var(--red);
+        }
+
+        .sb-dot.busy {
+            background: var(--amber);
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: .3;
+            }
+        }
+
+        .sb-sep {
+            color: var(--dim);
+        }
+
+        /* ── spinner ── */
+        .spin {
+            display: inline-block;
+            width: 11px;
+            height: 11px;
+            border: 1.5px solid rgba(0, 0, 0, .3);
+            border-top-color: rgba(0, 0, 0, .8);
+            border-radius: 50%;
+            animation: spin .55s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ── scrollbar ── */
+        ::-webkit-scrollbar {
+            width: 3px;
+            height: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border2);
+            border-radius: 2px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        /* ── responsive ── */
+        @media (max-width: 940px) {
+
+            html,
+            body {
+                overflow: auto;
+            }
+
+            .app {
+                height: auto;
+                min-height: 100vh;
+                grid-template-rows: 52px auto;
+            }
+
+            .main {
+                grid-template-columns: 1fr;
+                grid-template-rows: minmax(320px, 48vh) 1fr;
+                overflow: visible;
+            }
+
+            .left {
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+            }
+
+            .right {
+                min-height: 50vh;
+            }
+
+            .pipeline-wrap {
+                overflow-x: auto;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app">
+
+        <!-- TOPBAR -->
+        <div class="topbar">
+            <div class="brand">
+                <div class="brand-mark">
+                    <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="1" y="1" width="26" height="26" rx="6" stroke="#b4ff50" stroke-width="1.2" fill="none"
+                            opacity="0.4" />
+                        <rect x="4" y="4" width="20" height="20" rx="4" fill="#b4ff50" fill-opacity="0.08" />
+                        <path d="M8 10 L12 14 L8 18" stroke="#b4ff50" stroke-width="1.5" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                        <path d="M15 18 L20 18" stroke="#b4ff50" stroke-width="1.5" stroke-linecap="round"
+                            opacity="0.6" />
+                    </svg>
+                </div>
+                <div class="brand-text">
+                    <div class="brand-name">Compiler Playground</div>
+                    <div class="brand-pipe">lexer · parser · semantic</div>
+                </div>
+            </div>
+            <div class="topbar-right">
+                <span class="kbd-hint">⌘ + ↵ to run</span>
+                <div class="status-pill" id="serverPill">
+                    <div class="dot"></div><span id="pillText">connecting…</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- MAIN -->
+        <div class="main">
+
+            <!-- LEFT -->
+            <div class="left">
+                <div class="panel-label">
+                    <span class="panel-label-text">Source code</span>
+                </div>
+
+                <div class="editor-wrap">
+                    <div class="gutter" id="gutter">
+                        <div class="ln">1</div>
+                    </div>
+                    <textarea id="src" spellcheck="false"
+                        placeholder="int x;&#10;string name;&#10;x = 5;&#10;name = &quot;alice&quot;;">int x;</textarea>
+                </div>
+
+                <div class="snips">
+                    <div class="snips-header"><span class="snips-label">Snippets</span></div>
+                    <div class="snips-grid">
+
+                        <!-- Declarations -->
+                        <span class="snip" onclick="snip('int x;')">int x;</span>
+                        <span class="snip" onclick="snip('string name;')">string name;</span>
+
+                        <!-- Assignment = -->
+                        <span class="snip" onclick="snip('int x;\nx = 5;')">x = 5</span>
+                        <span class="snip" onclick="snip('string s;\ns = &quot;hi&quot;;')">s = "hi"</span>
+
+                        <!-- Arithmetic + -->
+                        <span class="snip" onclick="snip('int x;\nx = 3 + 4;')">x = 3+4</span>
+
+                        <!-- Arithmetic - -->
+                        <span class="snip" onclick="snip('int x;\nx = 8 - 3;')">x = 8-3</span>
+
+                        <!-- Arithmetic * -->
+                        <span class="snip" onclick="snip('int x;\nx = 4 * 7;')">x = 4*7</span>
+
+                        <!-- Chained arithmetic -->
+                        <span class="snip" onclick="snip('int x;\nx = 2 + 3 - 1;')">2+3-1</span>
+                        <span class="snip" onclick="snip('int x;\nx = 2 * 3 + 4;')">2*3+4</span>
+
+                        <!-- String concat + -->
+                        <span class="snip" onclick="snip('string s;\ns = &quot;hello&quot; + &quot; world&quot;;')">str
+                            concat</span>
+                        <span class="snip"
+                            onclick="snip('string a;\nstring b;\na = &quot;foo&quot;;\nb = &quot;bar&quot; + &quot;baz&quot;;')">2
+                            str
+                            vars</span>
+
+                        <!-- Comparison > -->
+                        <span class="snip" onclick="snip('int x;\nx = 5;\nif (x > 3) { x = 1; }')">if x > 3</span>
+                        <span class="snip"
+                            onclick="snip('int x;\nx = 0;\nif (x > 0) { x = 1; } else { x = 2; }')">if/else ></span>
+
+                        <!-- Nested if -->
+                        <span class="snip" onclick="snip('int x;\nx = 10;\nif (x > 5) { x = x - 1; }')">x = x - 1</span>
+
+                        <!-- if with expr body -->
+                        <span class="snip" onclick="snip('int x;\nx = 2;\nif (x > 1) { x = x * 3; }')">if x * 3</span>
+
+                        <!-- string manip -->
+                        <span class="snip"
+                            onclick="snip('int x;\nstring name;\nx = 11 + 7;\nname = &quot;GL4&quot;;')">string
+                            manip</span>
+
+                        <!-- full program complex -->
+                        <span class="snip"
+                            onclick="snip('int a;\nint b;\na = 3 * 2;\nb = a - 1;\nif (b > 4) { a = a + b; }')">full
+                            program</span>
+
+                        <!-- Error snippets -->
+                        <span class="snip err" onclick="snip('y = 10;')">⚠ undeclared</span>
+                        <span class="snip err" onclick="snip('int x;\nx = &quot;oops&quot;;')">⚠ type mismatch</span>
+                        <span class="snip err" onclick="snip('int x;\nx = 1 + &quot;bad&quot;;')">⚠ binop error</span>
+                        <span class="snip err" onclick="snip('int x;\nint x;')">⚠ redeclare</span>
+
+                    </div>
+                </div>
+
+                <div class="sym-section">
+                    <div class="panel-label">
+                        <span class="panel-label-text">Symbol table</span>
+                        <span class="panel-label-badge" id="symCount">0 vars</span>
+                    </div>
+                    <div class="sym-scroll" id="symWrap">
+                        <div class="sym-empty">No variables declared yet.</div>
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <button class="btn-run" id="runBtn" onclick="runPipeline()">
+                        <span id="runLabel">▶ Run</span>
+                    </button>
+                    <button class="btn-reset" onclick="resetSession()">Reset</button>
+                </div>
+            </div>
+
+            <!-- RIGHT -->
+            <div class="right">
+
+                <!-- pipeline bar -->
+                <div class="pipeline-wrap">
+                    <div class="stage" id="pLex">
+                        <div class="stage-num">01</div>
+                        <div class="stage-label">Lexer</div>
+                        <div class="stage-dot"></div>
+                    </div>
+                    <div class="pipe-connector">
+                        <svg width="28" height="12" viewBox="0 0 28 12">
+                            <path d="M0 6 H18 M18 6 L13 2 M18 6 L13 10" stroke="#272e3d" stroke-width="1.2"
+                                stroke-linecap="round" fill="none" />
+                        </svg>
+                    </div>
+                    <div class="stage" id="pParse">
+                        <div class="stage-num">02</div>
+                        <div class="stage-label">Parser</div>
+                        <div class="stage-dot"></div>
+                    </div>
+                    <div class="pipe-connector">
+                        <svg width="28" height="12" viewBox="0 0 28 12">
+                            <path d="M0 6 H18 M18 6 L13 2 M18 6 L13 10" stroke="#272e3d" stroke-width="1.2"
+                                stroke-linecap="round" fill="none" />
+                        </svg>
+                    </div>
+                    <div class="stage" id="pSem">
+                        <div class="stage-num">03</div>
+                        <div class="stage-label">Semantic</div>
+                        <div class="stage-dot"></div>
+                    </div>
+                </div>
+
+                <!-- outputs -->
+                <div class="outputs" id="outputs">
+                    <div class="placeholder">
+                        Write code, then press <span class="hl">▶ Run</span> or <span class="hl">⌘ + ↵</span>.<br>
+                        Your code passes through <span class="hl">lexical_analyser.py</span>,<br>
+                        <span class="hl">parser.py</span>, and <span class="hl">semantic_analyzer.py</span>.
+                        <br><br>
+                        <span class="dim">Try the snippets panel on the left →</span>
+                    </div>
+                </div>
+
+                <!-- statusbar -->
+                <div class="statusbar">
+                    <div class="sb-dot" id="sdot"></div>
+                    <span id="stext">Idle</span>
+                    <span class="sb-sep">·</span>
+                    <span id="stiming" style="color:var(--dim)">—</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API = '/api';
+        let t0 = 0;
+
+        /* ─── server ping ─── */
+        async function ping() {
+            try {
+                const r = await fetch(API + '/status');
+                const d = await r.json();
+                if (d.ok) {
+                    setPill('connected', 'ok');
+                    renderSymTable(d.symbol_table);
+                }
+            } catch { setPill('offline', 'err'); }
+        }
+        ping();
+
+        function setPill(txt, cls) {
+            document.getElementById('pillText').textContent = txt;
+            document.getElementById('serverPill').className = 'status-pill' + (cls ? ' ' + cls : '');
+        }
+
+        /* ─── line numbers ─── */
+        const srcEl = document.getElementById('src');
+        const gutEl = document.getElementById('gutter');
+        function updateGutter() {
+            const n = srcEl.value.split('\n').length;
+            gutEl.innerHTML = Array.from({ length: n }, (_, i) => `<div class="ln">${i + 1}</div>`).join('');
+        }
+        srcEl.addEventListener('input', updateGutter);
+        srcEl.addEventListener('keydown', e => {
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                const s = srcEl.selectionStart;
+                srcEl.value = srcEl.value.slice(0, s) + '  ' + srcEl.value.slice(srcEl.selectionEnd);
+                srcEl.selectionStart = srcEl.selectionEnd = s + 2;
+                updateGutter();
+            }
+        });
+        updateGutter();
+
+        /* ─── snippets ─── */
+        function snip(code) { srcEl.value = code; updateGutter(); srcEl.focus(); }
+
+        /* ─── stages ─── */
+        function setStage(id, state) { document.getElementById(id).className = 'stage ' + (state || ''); }
+        function resetStages() { ['pLex', 'pParse', 'pSem'].forEach(id => setStage(id, '')); }
+
+        /* ─── statusbar ─── */
+        function setStatus(state, txt) {
+            document.getElementById('sdot').className = 'sb-dot' + (state ? ' ' + state : '');
+            document.getElementById('stext').textContent = txt;
+        }
+        function setTiming(ms) {
+            document.getElementById('stiming').textContent = ms !== null ? ms + ' ms' : '—';
+        }
+
+        /* ─── symbol table ─── */
+        function renderSymTable(tbl) {
+            const wrap = document.getElementById('symWrap');
+            const entries = Object.entries(tbl || {});
+            document.getElementById('symCount').textContent = entries.length + ' var' + (entries.length !== 1 ? 's' : '');
+            if (!entries.length) {
+                wrap.innerHTML = '<div class="sym-empty">No variables declared yet.</div>';
+                return;
+            }
+            let html = `<table class="sym-table"><tr><th>Name</th><th>Type</th></tr>`;
+            for (const [name, type] of entries) {
+                html += `<tr class="sym-new"><td class="sym-name">${esc(name)}</td><td class="sym-type-${type}">${esc(type)}</td></tr>`;
+            }
+            html += '</table>';
+            wrap.innerHTML = html;
+        }
+
+        /* ─── helpers ─── */
+        function esc(s) {
+            return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        /* ─── AST renderer ─── */
+        function renderAST(node, depth = 0) {
+            if (!node) return '<span class="ast-val-str">null</span>';
+            const wrap = depth > 0 ? `<div class="ast-branch">` : `<div>`;
+            let out = wrap;
+            out += `<span class="ast-kind">${esc(node.kind)}</span>`;
+            if (node.kind === 'Decl') {
+                out += `<div class="ast-branch"><span class="ast-key">type:</span> <span class="ast-val-type">${esc(node.type)}</span><br><span class="ast-key">name:</span> <span class="ast-val-id">${esc(node.name)}</span></div>`;
+            } else if (node.kind === 'Assign') {
+                out += `<div class="ast-branch"><span class="ast-key">name:</span> <span class="ast-val-id">${esc(node.name)}</span><br><span class="ast-key">expr:</span> ${renderAST(node.expr, depth + 1)}</div>`;
+            } else if (node.kind === 'BinOp') {
+                out += `<div class="ast-branch"><span class="ast-key">op:</span> <span style="color:#a78bfa">${esc(node.op)}</span><br><span class="ast-key">left:</span> ${renderAST(node.left, depth + 1)}<br><span class="ast-key">right:</span> ${renderAST(node.right, depth + 1)}</div>`;
+            } else if (node.kind === 'IfStmt') {
+                out += `<div class="ast-branch"><span class="ast-key">cond:</span> ${renderAST(node.cond, depth + 1)}<br><span class="ast-key">body:</span><br>${node.body.map(n => renderAST(n, depth + 2)).join('<br>')}`;
+                if (node.else_body) out += `<br><span class="ast-key">else:</span><br>${node.else_body.map(n => renderAST(n, depth + 2)).join('<br>')}`;
+                out += `</div>`;
+            } else if (node.kind === 'Num') {
+                out += ` <span class="ast-val-num">(${node.value})</span>`;
+            } else if (node.kind === 'Str') {
+                out += ` <span class="ast-val-str">("${esc(node.value)}")</span>`;
+            } else if (node.kind === 'Id') {
+                out += ` <span class="ast-val-id">(${esc(node.name)})</span>`;
+            }
+            out += '</div>';
+            return out;
+        }
+
+        /* ─── card builder ─── */
+        function appendCard(out, stageNum, accentColor, title, bodyHtml) {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `
+    <div class="card-head">
+      <div class="card-stage-badge" style="color:${accentColor};border-color:${accentColor}22;background:${accentColor}11">${stageNum}</div>
+      <div class="card-title" style="color:${accentColor}">${title}</div>
+    </div>
+    <div class="card-body">${bodyHtml}</div>`;
+            out.appendChild(card);
+        }
+
+        /* ─── main run ─── */
+        async function runPipeline() {
+            const source = srcEl.value.trim();
+            if (!source) return;
+
+            const btn = document.getElementById('runBtn');
+            btn.disabled = true;
+            document.getElementById('runLabel').innerHTML = '<span class="spin"></span>';
+            setStatus('busy', 'Sending to Python backend…');
+            setTiming(null);
+            resetStages();
+            document.getElementById('outputs').innerHTML = '';
+            t0 = performance.now();
+
+            let data;
+            try {
+                const res = await fetch(API + '/run', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ source })
+                });
+                data = await res.json();
+            } catch {
+                setStatus('err', 'Server unreachable');
+                setPill('offline', 'err');
+                done(false, 'Server unreachable');
+                return;
+            }
+
+            const elapsed = Math.round(performance.now() - t0);
+            const s = data.stages || {};
+            const out = document.getElementById('outputs');
+
+            if (s.lexer) {
+                setStage('pLex', s.lexer.ok ? 'ok' : 'err');
+                if (s.lexer.ok) {
+                    const chips = s.lexer.tokens.map((t, k) =>
+                        `<div class="tok" style="animation-delay:${k * 12}ms">
+          <div class="tt ${t.type}">${t.type}</div>
+          <div class="tv">${t.type === 'STRING' ? '"' + esc(t.value) + '"' : esc(String(t.value))}</div>
+        </div>`).join('');
+                    appendCard(out, 'LEXER', 'var(--blue)', 'Stage 1 — Tokens', `<div class="tok-row">${chips}</div>`);
+                } else {
+                    appendCard(out, 'LEXER', 'var(--red)', 'Lexer Error', `<div class="err-block">${esc(s.lexer.error)}</div>`);
+                    done(false, s.lexer.error, elapsed); return;
+                }
+            }
+
+            if (s.parser) {
+                setStage('pParse', s.parser.ok ? 'ok' : 'err');
+                if (s.parser.ok) {
+                    const nodes = Array.isArray(s.parser.ast) ? s.parser.ast : (s.parser.ast ? [s.parser.ast] : []);
+                    appendCard(out, 'PARSER', 'var(--amber)', 'Stage 2 — Abstract Syntax Tree',
+                        `<div class="ast-tree">${nodes.map(n => renderAST(n)).join('<br>')}</div>`);
+                } else {
+                    appendCard(out, 'PARSER', 'var(--red)', 'Parser Error', `<div class="err-block">${esc(s.parser.error)}</div>`);
+                    done(false, s.parser.error, elapsed); return;
+                }
+            }
+
+            if (s.semantic) {
+                setStage('pSem', s.semantic.ok ? 'ok' : 'err');
+                if (s.semantic.ok) {
+                    const tc = s.semantic.type === 'int' ? 'int' : 'string';
+                    appendCard(out, 'SEM', 'var(--green)', 'Stage 3 — Semantic Analysis',
+                        `<div class="sem-result">
+          <div>
+            <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;font-family:var(--sans);">Inferred type</div>
+            <div class="type-chip ${s.semantic.type ? tc : 'int'}">${s.semantic.type ? esc(s.semantic.type) : '—'}</div>
+          </div>
+          <div class="ok-bar">Program is semantically valid</div>
+        </div>`);
+                    renderSymTable(s.semantic.symbol_table);
+                } else {
+                    appendCard(out, 'SEM', 'var(--red)', 'Semantic Error', `<div class="err-block">${esc(s.semantic.error)}</div>`);
+                    renderSymTable(s.semantic.symbol_table || {});
+                    done(false, s.semantic.error, elapsed); return;
+                }
+            }
+
+            done(true, 'Valid program', elapsed);
+        }
+
+        function done(ok, msg, ms) {
+            document.getElementById('runBtn').disabled = false;
+            document.getElementById('runLabel').textContent = '▶ Run';
+            setStatus(ok ? 'ok' : 'err', msg || '');
+            if (ms != null) setTiming(ms);
+        }
+
+        /* ─── reset ─── */
+        async function resetSession() {
+            try {
+                await fetch(API + '/reset', { method: 'POST' });
+                renderSymTable({});
+                document.getElementById('outputs').innerHTML = `<div class="placeholder">Session reset — symbol table cleared.<br><span class="dim">You can redeclare your variables.</span></div>`;
+                resetStages();
+                setStatus('', 'Session reset');
+                setTiming(null);
+            } catch { setStatus('err', 'Server unreachable'); }
+        }
+
+        /* ─── keyboard ─── */
+        document.addEventListener('keydown', e => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); runPipeline(); }
+        });
+    </script>
+</body>
+
+</html>

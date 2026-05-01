@@ -183,11 +183,11 @@ class Parser:
 if __name__ == '__main__':
     tests = [
         "int x;",
-        "x = 5;",
-        "x = 5 + 2;",
+        "x = 7;",
+        "x = 11 + 7;",
         "string name;",
-        'name = "alice";',
-        'name = "hello" + " world";',
+        'name = "sahbi";',
+        'name = "sahbi" + "yassine";',
     ]
 
     for src in tests:

@@ -1,643 +1,1519 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" data-theme="dark">
+
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Compiler Playground</title>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-<style>
-:root {
-  --bg:        #0a0a0f;
-  --surface:   #111118;
-  --surface2:  #18181f;
-  --surface3:  #1f1f28;
-  --border:    rgba(255,255,255,0.07);
-  --border2:   rgba(255,255,255,0.13);
-  --text:      #ededf5;
-  --muted:     #6b6b88;
-  --dim:       #383850;
-  --accent:    #7c5cfc;
-  --accent-lo: rgba(124,92,252,0.12);
-  --green:     #22d3a0;
-  --green-lo:  rgba(34,211,160,0.1);
-  --red:       #f16b6b;
-  --red-lo:    rgba(241,107,107,0.1);
-  --amber:     #f5a623;
-  --amber-lo:  rgba(245,166,35,0.1);
-  --blue:      #5b9cf6;
-  --blue-lo:   rgba(91,156,246,0.1);
-  --pink:      #e879f9;
-  --pink-lo:   rgba(232,121,249,0.1);
-  --mono: 'IBM Plex Mono', monospace;
-  --sans: 'Space Grotesk', sans-serif;
-  --r: 10px;
-}
-*{box-sizing:border-box;margin:0;padding:0;}
-html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--sans);overflow:hidden;}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Compiler Playground</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600&display=swap"
+    rel="stylesheet" />
+  <style>
+    /* ─────────────────── THEME TOKENS ─────────────────── */
+    :root,
+    [data-theme="dark"] {
+      --bg: #060709;
+      --surface: #0c0e12;
+      --surface2: #12151b;
+      --surface3: #181c24;
+      --border: rgba(255, 255, 255, 0.055);
+      --border2: rgba(255, 255, 255, 0.11);
+      --border3: rgba(255, 255, 255, 0.18);
+      --text: #e6eaf2;
+      --text2: #9aa0b0;
+      --muted: #525a6e;
+      --dim: #272e3d;
+      --shadow: rgba(0, 0, 0, 0.5);
+      --lime: #b4ff50;
+      --lime-lo: rgba(180, 255, 80, 0.08);
+      --lime-md: rgba(180, 255, 80, 0.15);
+      --green: #3de89a;
+      --green-lo: rgba(61, 232, 154, 0.09);
+      --red: #ff5f5f;
+      --red-lo: rgba(255, 95, 95, 0.09);
+      --amber: #ffb547;
+      --amber-lo: rgba(255, 181, 71, 0.09);
+      --blue: #6ca8ff;
+      --blue-lo: rgba(108, 168, 255, 0.09);
+      --pink: #d97bff;
+      --pink-lo: rgba(217, 123, 255, 0.09);
+      --mono: 'JetBrains Mono', monospace;
+      --sans: 'Syne', sans-serif;
+      --r: 8px;
+    }
 
-/* ── GRID ── */
-.app{display:grid;grid-template-rows:56px 1fr;height:100vh;}
-.main{display:grid;grid-template-columns:minmax(300px, 380px) minmax(0, 1fr);overflow:hidden;}
+    [data-theme="light"] {
+      --bg: #f2f4f8;
+      --surface: #ffffff;
+      --surface2: #f0f2f6;
+      --surface3: #e8ebf1;
+      --border: rgba(0, 0, 0, 0.07);
+      --border2: rgba(0, 0, 0, 0.13);
+      --border3: rgba(0, 0, 0, 0.2);
+      --text: #0e1117;
+      --text2: #4a5263;
+      --muted: #7a8499;
+      --dim: #c0c7d4;
+      --shadow: rgba(0, 0, 0, 0.07);
+      --lime: #4a9900;
+      --lime-lo: rgba(74, 153, 0, 0.07);
+      --lime-md: rgba(74, 153, 0, 0.14);
+      --green: #0a8f52;
+      --green-lo: rgba(10, 143, 82, 0.08);
+      --red: #c42b2b;
+      --red-lo: rgba(196, 43, 43, 0.08);
+      --amber: #a06800;
+      --amber-lo: rgba(160, 104, 0, 0.08);
+      --blue: #1d59cc;
+      --blue-lo: rgba(29, 89, 204, 0.08);
+      --pink: #8b25b8;
+      --pink-lo: rgba(139, 37, 184, 0.08);
+    }
 
-/* ── TOPBAR ── */
-.topbar{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:0 20px;
-  border-bottom:1px solid var(--border);
-  background:var(--surface);
-  z-index:10;
-}
-.brand{display:flex;align-items:center;gap:10px;}
-.brand-icon{
-  width:30px;height:30px;border-radius:7px;
-  background:var(--accent);
-  display:flex;align-items:center;justify-content:center;
-  font-size:14px;
-}
-.brand-name{font-size:15px;font-weight:700;letter-spacing:-0.02em;}
-.brand-sub{font-size:11px;color:var(--muted);font-weight:400;}
-.topbar-right{display:flex;align-items:center;gap:8px;}
-.pill{
-  font-family:var(--mono);font-size:10px;font-weight:500;
-  padding:3px 9px;border-radius:20px;
-  border:1px solid var(--border2);color:var(--muted);
-  letter-spacing:0.04em;
-}
-.pill.green{border-color:rgba(34,211,160,0.3);color:var(--green);background:var(--green-lo);}
-.pill.red{border-color:rgba(241,107,107,0.3);color:var(--red);background:var(--red-lo);}
+    /* ─────────────────── BASE ─────────────────── */
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-/* ── LEFT PANEL ── */
-.left{
-  display:flex;flex-direction:column;
-  border-right:1px solid var(--border);
-  background:var(--surface);
-  overflow:hidden;
-}
-.panel-head{
-  padding:12px 16px 10px;
-  border-bottom:1px solid var(--border);
-  font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);
-}
+    /* smooth theme transitions — skip on initial load */
+    .theme-ready * {
+      transition:
+        background-color .2s ease,
+        border-color .2s ease,
+        color .15s ease,
+        box-shadow .2s ease,
+        fill .2s ease,
+        stroke .2s ease;
+    }
 
-/* editor */
-.editor-wrap{position:relative;flex:1;display:flex;overflow:hidden;}
-.gutter{
-  width:42px;flex-shrink:0;
-  background:var(--surface);
-  border-right:1px solid var(--border);
-  padding:14px 0;
-  display:flex;flex-direction:column;align-items:flex-end;
-  overflow:hidden;
-}
-.ln{
-  font-family:var(--mono);font-size:12px;color:var(--dim);
-  line-height:20px;height:20px;padding-right:8px;
-  display:flex;align-items:center;
-}
-#src{
-  flex:1;background:transparent;border:none;outline:none;
-  color:var(--text);font-family:var(--mono);font-size:13px;line-height:20px;
-  padding:14px 14px;resize:none;caret-color:var(--accent);
-  overflow-y:auto;
-}
-#src::placeholder{color:var(--dim);}
+    html,
+    body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      overflow: hidden;
+    }
 
-/* snippets */
-.snips{padding:10px 14px;border-top:1px solid var(--border);}
-.snips-label{font-size:10px;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:7px;}
-.snips-grid{display:flex;flex-wrap:wrap;gap:4px;}
-.snip{
-  font-family:var(--mono);font-size:10.5px;
-  padding:3px 8px;background:var(--surface2);
-  border:1px solid var(--border);border-radius:5px;
-  color:var(--muted);cursor:pointer;transition:all .12s;
-}
-.snip:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-lo);}
-.snip.danger:hover{border-color:var(--red);color:var(--red);background:var(--red-lo);}
+    /* ─────────────────── GRID ─────────────────── */
+    .app {
+      display: grid;
+      grid-template-rows: 52px 1fr;
+      height: 100vh;
+    }
 
-/* symbol table */
-.sym-wrap{border-top:1px solid var(--border);padding:10px 14px;max-height:160px;overflow-y:auto;}
-.sym-empty{font-family:var(--mono);font-size:11px;color:var(--dim);font-style:italic;}
-.sym-table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12px;}
-.sym-table th{color:var(--muted);font-size:10px;letter-spacing:0.06em;text-transform:uppercase;padding:3px 4px;text-align:left;font-weight:500;}
-.sym-table td{padding:4px 4px;border-top:1px solid var(--border);}
-.sym-name{color:var(--green);}
-.type-int{color:var(--blue);}
-.type-string{color:var(--pink);}
-.sym-new{animation:flashRow .5s ease;}
-@keyframes flashRow{from{background:rgba(124,92,252,.2);}to{background:transparent;}}
+    .main {
+      display: grid;
+      grid-template-columns: 360px minmax(0, 1fr);
+      overflow: hidden;
+    }
 
-/* actions */
-.actions{padding:12px 14px;border-top:1px solid var(--border);display:flex;gap:8px;}
-.btn-run{
-  flex:1;background:var(--accent);color:#fff;border:none;border-radius:8px;
-  padding:10px;font-family:var(--sans);font-size:13px;font-weight:600;
-  cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;
-  transition:all .15s;
-}
-.btn-run:hover{filter:brightness(1.15);transform:translateY(-1px);}
-.btn-run:active{transform:translateY(0);}
-.btn-run:disabled{opacity:.5;pointer-events:none;}
-.btn-reset{
-  background:transparent;border:1px solid var(--border2);border-radius:8px;
-  padding:10px 13px;color:var(--muted);font-family:var(--sans);font-size:12px;
-  cursor:pointer;transition:all .12s;
-}
-.btn-reset:hover{border-color:var(--red);color:var(--red);}
+    /* ─────────────────── TOPBAR ─────────────────── */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 22px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      position: relative;
+      z-index: 10;
+    }
 
-/* ── RIGHT PANEL ── */
-.right{display:flex;flex-direction:column;overflow:hidden;background:var(--bg);min-width:0;}
+    .topbar::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, var(--lime) 0%, transparent 55%);
+      opacity: 0.4;
+    }
 
-/* pipeline */
-.pipeline{
-  display:flex;align-items:center;gap:0;
-  padding:14px 20px;border-bottom:1px solid var(--border);
-  background:var(--surface);
-}
-.stage-node{
-  display:flex;align-items:center;gap:7px;
-  padding:6px 13px;border-radius:7px;
-  font-size:12px;font-weight:600;letter-spacing:.02em;
-  color:var(--muted);border:1px solid transparent;
-  transition:all .2s;position:relative;
-}
-.stage-node .dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0;}
-.stage-node.running{color:var(--amber);border-color:rgba(245,166,35,.3);background:var(--amber-lo);animation:glow .8s ease infinite alternate;}
-@keyframes glow{from{box-shadow:0 0 0 0 rgba(245,166,35,0);}to{box-shadow:0 0 8px 1px rgba(245,166,35,.2);}}
-.stage-node.ok{color:var(--green);border-color:rgba(34,211,160,.3);background:var(--green-lo);}
-.stage-node.err{color:var(--red);border-color:rgba(241,107,107,.3);background:var(--red-lo);}
-.pipe-arrow{color:var(--dim);margin:0 2px;font-size:16px;user-select:none;}
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
 
-/* outputs */
-.outputs{flex:1;min-height:0;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px;}
-.placeholder{color:var(--dim);font-family:var(--mono);font-size:12px;padding:24px 4px;line-height:1.8;}
-.placeholder span{color:var(--accent);}
+    .brand-mark {
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
 
-/* cards */
-.card{
-  background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
-  overflow:hidden;animation:slideIn .2s ease both;flex-shrink:0;
-}
-@keyframes slideIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
-.card-head{
-  display:flex;align-items:center;gap:8px;
-  flex-wrap:wrap;
-  padding:9px 14px;border-bottom:1px solid var(--border);
-  font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
-}
-.card-head .cdot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
-.card-body{padding:12px 14px;}
+    .brand-mark svg {
+      width: 28px;
+      height: 28px;
+    }
 
-/* token chips */
-.tok-row{display:flex;flex-wrap:wrap;gap:5px;padding:10px 14px;max-height:140px;overflow:auto;}
-.tok{
-  display:inline-flex;flex-direction:column;align-items:center;
-  border-radius:5px;overflow:hidden;border:1px solid var(--border2);
-  font-family:var(--mono);font-size:10px;
-  animation:fadeUp .12s ease both;
-}
-@keyframes fadeUp{from{opacity:0;transform:translateY(3px);}to{opacity:1;transform:translateY(0);}}
-.tok .tt{padding:2px 7px;font-weight:600;letter-spacing:.05em;}
-.tok .tv{padding:2px 7px;background:var(--surface2);border-top:1px solid var(--border);color:var(--text);}
-.tt.KEYWORD{background:var(--blue-lo);color:var(--blue);}
-.tt.ID     {background:var(--green-lo);color:var(--green);}
-.tt.NUM    {background:var(--amber-lo);color:var(--amber);}
-.tt.STRING {background:var(--pink-lo);color:var(--pink);}
-.tt.OP     {background:var(--accent-lo);color:#a78bfa;}
-.tt.SEMI, .tt.LPAREN, .tt.RPAREN, .tt.LBRACE, .tt.RBRACE {background:rgba(255,255,255,.03);color:var(--muted);}
+    .brand-text {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
 
-/* AST tree */
-.ast-tree{font-family:var(--mono);font-size:12px;line-height:1.7;color:var(--text);max-height:220px;overflow:auto;}
-.ast-kind{color:#a78bfa;font-weight:600;}
-.ast-key{color:var(--muted);}
-.ast-val-str{color:var(--pink);}
-.ast-val-num{color:var(--amber);}
-.ast-val-id{color:var(--green);}
-.ast-val-type{color:var(--blue);}
-.ast-branch{padding-left:16px;border-left:1px solid var(--border2);margin-left:4px;}
+    .brand-name {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--text);
+    }
 
-/* result */
-.result-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
-.type-badge{
-  font-family:var(--mono);font-size:13px;font-weight:700;
-  padding:5px 14px;border-radius:6px;border:1px solid;
-}
-.type-badge.int{background:var(--blue-lo);color:var(--blue);border-color:rgba(91,156,246,.3);}
-.type-badge.string{background:var(--pink-lo);color:var(--pink);border-color:rgba(232,121,249,.3);}
-.ok-msg{
-  flex:1;padding:8px 12px;border-radius:7px;
-  background:var(--green-lo);border:1px solid rgba(34,211,160,.2);
-  font-family:var(--mono);font-size:12px;color:var(--green);
-}
-.err-msg{
-  padding:10px 14px;border-radius:7px;
-  background:var(--red-lo);border:1px solid rgba(241,107,107,.2);
-  font-family:var(--mono);font-size:12px;color:var(--red);line-height:1.6;
-}
+    .brand-pipe {
+      font-family: var(--mono);
+      font-size: 9.5px;
+      font-weight: 300;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+    }
 
-/* statusbar */
-.statusbar{
-  padding:7px 20px;border-top:1px solid var(--border);
-  background:var(--surface);font-family:var(--mono);font-size:11px;
-  color:var(--muted);display:flex;align-items:center;gap:8px;
-}
-.sdot{width:6px;height:6px;border-radius:50%;background:var(--muted);flex-shrink:0;transition:all .3s;}
-.sdot.ok{background:var(--green);box-shadow:0 0 5px var(--green);}
-.sdot.err{background:var(--red);box-shadow:0 0 5px var(--red);}
-.sdot.busy{background:var(--amber);animation:blink 1s infinite;}
-@keyframes blink{0%,100%{opacity:1;}50%{opacity:.3;}}
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
 
-/* spinner */
-.spin{
-  display:inline-block;width:12px;height:12px;
-  border:2px solid rgba(255,255,255,.25);
-  border-top-color:#fff;border-radius:50%;
-  animation:spin .6s linear infinite;
-}
-@keyframes spin{to{transform:rotate(360deg);}}
+    .kbd-hint {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--muted);
+      opacity: 0.6;
+    }
 
-/* responsive: avoid panel compression on smaller screens */
-@media (max-width: 980px) {
-  html,body{overflow:auto;}
-  .app{height:auto;min-height:100vh;grid-template-rows:56px auto;}
-  .main{grid-template-columns:1fr;grid-template-rows:minmax(300px, 46vh) minmax(0, 1fr);overflow:visible;}
-  .left{border-right:none;border-bottom:1px solid var(--border);}
-  .right{min-height:50vh;}
-  .pipeline{padding:10px 12px;overflow-x:auto;}
-}
+    /* ── theme toggle button ── */
+    .theme-toggle {
+      width: 32px;
+      height: 32px;
+      border-radius: 7px;
+      border: 1px solid var(--border2);
+      background: var(--surface2);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      flex-shrink: 0;
+      position: relative;
+      overflow: hidden;
+    }
 
-/* scrollbar */
-::-webkit-scrollbar{width:4px;}
-::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
-::-webkit-scrollbar-track{background:transparent;}
-</style>
+    .theme-toggle:hover {
+      border-color: var(--lime);
+      color: var(--lime);
+      background: var(--lime-lo);
+      transform: scale(1.05);
+    }
+
+    .theme-toggle:active {
+      transform: scale(0.95);
+    }
+
+    .t-icon {
+      position: absolute;
+      transition: opacity .2s ease, transform .25s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* dark mode: show sun to signal "switch to light" */
+    [data-theme="dark"] .t-sun {
+      opacity: 1;
+      transform: translateY(0) rotate(0deg);
+    }
+
+    [data-theme="dark"] .t-moon {
+      opacity: 0;
+      transform: translateY(8px) rotate(-30deg);
+    }
+
+    /* light mode: show moon to signal "switch to dark" */
+    [data-theme="light"] .t-sun {
+      opacity: 0;
+      transform: translateY(-8px) rotate(30deg);
+    }
+
+    [data-theme="light"] .t-moon {
+      opacity: 1;
+      transform: translateY(0) rotate(0deg);
+    }
+
+    .status-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--mono);
+      font-size: 10px;
+      padding: 4px 10px 4px 8px;
+      border-radius: 20px;
+      border: 1px solid var(--border2);
+      color: var(--muted);
+      background: var(--surface2);
+    }
+
+    .status-pill .dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--muted);
+      flex-shrink: 0;
+    }
+
+    .status-pill.ok {
+      border-color: rgba(61, 232, 154, .3);
+      color: var(--green);
+      background: var(--green-lo);
+    }
+
+    .status-pill.ok .dot {
+      background: var(--green);
+      box-shadow: 0 0 5px var(--green);
+    }
+
+    .status-pill.err {
+      border-color: rgba(255, 95, 95, .3);
+      color: var(--red);
+      background: var(--red-lo);
+    }
+
+    .status-pill.err .dot {
+      background: var(--red);
+    }
+
+    /* ─────────────────── LEFT PANEL ─────────────────── */
+    .left {
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid var(--border);
+      background: var(--surface);
+      overflow: hidden;
+    }
+
+    .panel-label {
+      padding: 10px 16px 9px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .panel-label-text {
+      font-size: 9.5px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .panel-label-badge {
+      font-family: var(--mono);
+      font-size: 9px;
+      padding: 1px 6px;
+      border: 1px solid var(--border2);
+      border-radius: 3px;
+      color: var(--muted);
+    }
+
+    /* ── editor ── */
+    .editor-wrap {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    .gutter {
+      width: 40px;
+      flex-shrink: 0;
+      padding: 13px 0;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .ln {
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 300;
+      color: var(--dim);
+      line-height: 20px;
+      height: 20px;
+      padding-right: 8px;
+    }
+
+    #src {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 12.5px;
+      line-height: 20px;
+      padding: 13px 16px;
+      resize: none;
+      caret-color: var(--lime);
+      overflow-y: auto;
+    }
+
+    #src::selection {
+      background: var(--lime-md);
+    }
+
+    #src::placeholder {
+      color: var(--dim);
+    }
+
+    /* ── snippets ── */
+    .snips {
+      padding: 10px 14px 12px;
+      border-top: 1px solid var(--border);
+    }
+
+    .snips-header {
+      margin-bottom: 8px;
+    }
+
+    .snips-label {
+      font-size: 9.5px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .snips-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .snip {
+      font-family: var(--mono);
+      font-size: 10px;
+      padding: 3px 8px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text2);
+      cursor: pointer;
+      letter-spacing: 0.02em;
+    }
+
+    .snip:hover {
+      border-color: var(--lime);
+      color: var(--lime);
+      background: var(--lime-lo);
+    }
+
+    .snip.err:hover {
+      border-color: var(--red);
+      color: var(--red);
+      background: var(--red-lo);
+    }
+
+    /* ── symbol table ── */
+    .sym-section {
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      max-height: 148px;
+    }
+
+    .sym-scroll {
+      overflow-y: auto;
+      padding: 8px 14px 10px;
+      flex: 1;
+    }
+
+    .sym-empty {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--dim);
+      font-style: italic;
+      padding: 4px 0;
+    }
+
+    .sym-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--mono);
+      font-size: 11.5px;
+    }
+
+    .sym-table th {
+      font-size: 9px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 2px 6px 4px 0;
+      text-align: left;
+      font-weight: 500;
+      font-family: var(--sans);
+    }
+
+    .sym-table td {
+      padding: 3px 6px 3px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .sym-name {
+      color: var(--green);
+      font-weight: 500;
+    }
+
+    .sym-type-int {
+      color: var(--blue);
+    }
+
+    .sym-type-string {
+      color: var(--pink);
+    }
+
+    .sym-new {
+      animation: rowFlash .4s ease;
+    }
+
+    @keyframes rowFlash {
+      from {
+        background: var(--lime-md);
+      }
+
+      to {
+        background: transparent;
+      }
+    }
+
+    /* ── actions ── */
+    .actions {
+      padding: 12px 14px 14px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-run {
+      flex: 1;
+      background: var(--lime);
+      color: #040506;
+      border: none;
+      border-radius: var(--r);
+      padding: 10px 16px;
+      font-family: var(--sans);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      letter-spacing: -0.01em;
+    }
+
+    .btn-run:hover {
+      filter: brightness(1.08);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px var(--lime-md);
+    }
+
+    .btn-run:active {
+      transform: translateY(0);
+    }
+
+    .btn-run:disabled {
+      opacity: .45;
+      pointer-events: none;
+      box-shadow: none;
+    }
+
+    .btn-reset {
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: var(--r);
+      padding: 10px 13px;
+      color: var(--muted);
+      font-family: var(--sans);
+      font-size: 12px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    .btn-reset:hover {
+      border-color: var(--red);
+      color: var(--red);
+      background: var(--red-lo);
+    }
+
+    /* ─────────────────── RIGHT PANEL ─────────────────── */
+    .right {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: var(--bg);
+    }
+
+    /* ── pipeline ── */
+    .pipeline-wrap {
+      padding: 14px 22px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      display: flex;
+      align-items: center;
+    }
+
+    .stage {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 7px 14px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      min-width: 110px;
+    }
+
+    .stage-num {
+      font-family: var(--mono);
+      font-size: 9px;
+      font-weight: 600;
+      width: 16px;
+      height: 16px;
+      border-radius: 3px;
+      background: var(--dim);
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .stage-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+    }
+
+    .stage-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--dim);
+      margin-left: auto;
+      flex-shrink: 0;
+    }
+
+    .stage.running {
+      border-color: rgba(255, 181, 71, .3);
+      background: var(--amber-lo);
+    }
+
+    .stage.running .stage-num {
+      background: rgba(255, 181, 71, .2);
+      color: var(--amber);
+    }
+
+    .stage.running .stage-label {
+      color: var(--amber);
+    }
+
+    .stage.running .stage-dot {
+      background: var(--amber);
+      animation: pulse .7s ease infinite alternate;
+    }
+
+    @keyframes pulse {
+      from {
+        box-shadow: none;
+      }
+
+      to {
+        box-shadow: 0 0 6px var(--amber);
+      }
+    }
+
+    .stage.ok {
+      border-color: rgba(61, 232, 154, .2);
+      background: var(--green-lo);
+    }
+
+    .stage.ok .stage-num {
+      background: rgba(61, 232, 154, .15);
+      color: var(--green);
+    }
+
+    .stage.ok .stage-label {
+      color: var(--green);
+    }
+
+    .stage.ok .stage-dot {
+      background: var(--green);
+    }
+
+    .stage.err {
+      border-color: rgba(255, 95, 95, .2);
+      background: var(--red-lo);
+    }
+
+    .stage.err .stage-num {
+      background: rgba(255, 95, 95, .15);
+      color: var(--red);
+    }
+
+    .stage.err .stage-label {
+      color: var(--red);
+    }
+
+    .stage.err .stage-dot {
+      background: var(--red);
+    }
+
+    .pipe-connector {
+      display: flex;
+      align-items: center;
+      margin: 0 4px;
+      flex-shrink: 0;
+    }
+
+    .pipe-connector svg {
+      display: block;
+    }
+
+    /* ── outputs ── */
+    .outputs {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      padding: 14px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .placeholder {
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 11.5px;
+      line-height: 1.9;
+      padding: 28px 6px;
+    }
+
+    .placeholder .hl {
+      color: var(--lime);
+    }
+
+    .placeholder .dim-txt {
+      color: var(--dim);
+    }
+
+    /* ── cards ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      animation: riseIn .22s ease both;
+      flex-shrink: 0;
+    }
+
+    [data-theme="light"] .card {
+      box-shadow: 0 1px 6px var(--shadow);
+    }
+
+    @keyframes riseIn {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .card-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .card-stage-badge {
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 4px;
+      border: 1px solid;
+      flex-shrink: 0;
+    }
+
+    .card-title {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      flex: 1;
+    }
+
+    .card-body {
+      padding: 12px 14px;
+    }
+
+    /* ── token chips ── */
+    .tok-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+
+    .tok {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      border-radius: 5px;
+      overflow: hidden;
+      border: 1px solid var(--border2);
+      font-family: var(--mono);
+      font-size: 9.5px;
+      animation: chipIn .1s ease both;
+    }
+
+    @keyframes chipIn {
+      from {
+        opacity: 0;
+        transform: scale(.9);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .tok .tt {
+      padding: 2px 8px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+    }
+
+    .tok .tv {
+      padding: 2px 8px;
+      background: var(--surface2);
+      border-top: 1px solid var(--border);
+      color: var(--text2);
+    }
+
+    .tt.KEYWORD {
+      background: var(--blue-lo);
+      color: var(--blue);
+    }
+
+    .tt.ID {
+      background: var(--green-lo);
+      color: var(--green);
+    }
+
+    .tt.NUM {
+      background: var(--amber-lo);
+      color: var(--amber);
+    }
+
+    .tt.STRING {
+      background: var(--pink-lo);
+      color: var(--pink);
+    }
+
+    .tt.OP {
+      background: var(--lime-lo);
+      color: var(--lime);
+    }
+
+    .tt.SEMI,
+    .tt.LPAREN,
+    .tt.RPAREN,
+    .tt.LBRACE,
+    .tt.RBRACE {
+      background: var(--surface2);
+      color: var(--muted);
+    }
+
+    /* ── AST ── */
+    .ast-tree {
+      font-family: var(--mono);
+      font-size: 11.5px;
+      line-height: 1.75;
+      color: var(--text);
+      max-height: 230px;
+      overflow: auto;
+    }
+
+    .ast-kind {
+      color: var(--pink);
+      font-weight: 600;
+    }
+
+    .ast-key {
+      color: var(--muted);
+    }
+
+    .ast-val-str {
+      color: var(--pink);
+    }
+
+    .ast-val-num {
+      color: var(--amber);
+    }
+
+    .ast-val-id {
+      color: var(--green);
+    }
+
+    .ast-val-type {
+      color: var(--blue);
+    }
+
+    .ast-branch {
+      padding-left: 16px;
+      border-left: 1px solid var(--border2);
+      margin-left: 5px;
+    }
+
+    /* ── semantic result ── */
+    .sem-result {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .type-chip {
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 5px;
+      border: 1px solid;
+    }
+
+    .type-chip.int {
+      background: var(--blue-lo);
+      color: var(--blue);
+      border-color: rgba(108, 168, 255, .25);
+    }
+
+    .type-chip.string {
+      background: var(--pink-lo);
+      color: var(--pink);
+      border-color: rgba(217, 123, 255, .25);
+    }
+
+    .ok-bar {
+      flex: 1;
+      padding: 8px 12px;
+      border-radius: 6px;
+      background: var(--green-lo);
+      border: 1px solid rgba(61, 232, 154, .2);
+      font-family: var(--mono);
+      font-size: 11.5px;
+      color: var(--green);
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .ok-bar::before {
+      content: '';
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--green);
+      flex-shrink: 0;
+    }
+
+    .err-block {
+      padding: 10px 14px;
+      border-radius: 6px;
+      background: var(--red-lo);
+      border: 1px solid rgba(255, 95, 95, .2);
+      font-family: var(--mono);
+      font-size: 11.5px;
+      color: var(--red);
+      line-height: 1.65;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .err-block::before {
+      content: '✕';
+      flex-shrink: 0;
+      font-size: 10px;
+      margin-top: 1px;
+      opacity: 0.7;
+    }
+
+    /* ── statusbar ── */
+    .statusbar {
+      padding: 7px 22px;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      font-family: var(--mono);
+      font-size: 10.5px;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .sb-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--dim);
+      flex-shrink: 0;
+    }
+
+    .sb-dot.ok {
+      background: var(--green);
+      box-shadow: 0 0 4px var(--green);
+    }
+
+    .sb-dot.err {
+      background: var(--red);
+      box-shadow: 0 0 4px var(--red);
+    }
+
+    .sb-dot.busy {
+      background: var(--amber);
+      animation: blink 1s infinite;
+    }
+
+    @keyframes blink {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: .3;
+      }
+    }
+
+    .sb-sep {
+      color: var(--dim);
+    }
+
+    /* ── spinner ── */
+    .spin {
+      display: inline-block;
+      width: 11px;
+      height: 11px;
+      border: 1.5px solid rgba(0, 0, 0, .25);
+      border-top-color: rgba(0, 0, 0, .75);
+      border-radius: 50%;
+      animation: spin .55s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* ── scrollbar ── */
+    ::-webkit-scrollbar {
+      width: 3px;
+      height: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border2);
+      border-radius: 2px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    /* ── responsive ── */
+    @media (max-width: 940px) {
+
+      html,
+      body {
+        overflow: auto;
+      }
+
+      .app {
+        height: auto;
+        min-height: 100vh;
+        grid-template-rows: 52px auto;
+      }
+
+      .main {
+        grid-template-columns: 1fr;
+        grid-template-rows: minmax(320px, 48vh) 1fr;
+        overflow: visible;
+      }
+
+      .left {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .right {
+        min-height: 50vh;
+      }
+
+      .pipeline-wrap {
+        overflow-x: auto;
+      }
+    }
+  </style>
 </head>
+
 <body>
-<div class="app">
+  <div class="app">
 
-  <!-- TOPBAR -->
-  <div class="topbar">
-    <div class="brand">
-      <div class="brand-icon">⚙</div>
-      <div>
-        <div class="brand-name">Compiler Playground</div>
-        <div class="brand-sub">lexical_analyser · parser · semantic_analyzer</div>
-      </div>
-    </div>
-    <div class="topbar-right">
-      <div class="pill" id="serverPill">● connecting…</div>
-    </div>
-  </div>
-
-  <!-- MAIN -->
-  <div class="main">
-
-    <!-- LEFT -->
-    <div class="left">
-      <div class="panel-head">Source code</div>
-
-      <div class="editor-wrap">
-        <div class="gutter" id="gutter"><div class="ln">1</div></div>
-        <textarea id="src" spellcheck="false" placeholder="int x;\nstring name;\nx = 5;\nname = &quot;alice&quot;;">int x;</textarea>
-      </div>
-
-      <div class="snips">
-        <div class="snips-label">Snippets</div>
-        <div class="snips-grid">
-          <span class="snip" onclick="snip('int x;')">int x;</span>
-          <span class="snip" onclick="snip('string name;')">string name;</span>
-          <span class="snip" onclick="snip('x = 5;')">x = 5;</span>
-          <span class="snip" onclick="snip('x = 5 + 2;')">x = 5+2</span>
-          <span class="snip" onclick="snip('name = &quot;alice&quot;;')">str assign</span>
-          <span class="snip" onclick="snip('name = &quot;hello&quot; + &quot; world&quot;;')">str concat</span>
-          <span class="snip danger" onclick="snip('y = 10;')">⚠ undeclared</span>
-          <span class="snip danger" onclick="snip('x = &quot;oops&quot;;')">⚠ type mismatch</span>
-          <span class="snip danger" onclick="snip('x = 1 + &quot;bad&quot;;')">⚠ binop error</span>
-          <span class="snip danger" onclick="snip('int x;')">⚠ redeclare</span>
-          <span class="snip" onclick="snip('int x;\nstring name;\nx = 5 + 2;\nname = &quot;hello&quot;;')">full program</span>
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="brand">
+        <div class="brand-mark">
+          <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="1" y="1" width="26" height="26" rx="6" stroke="var(--lime)" stroke-width="1.2" fill="none"
+              opacity="0.45" />
+            <rect x="4" y="4" width="20" height="20" rx="4" fill="var(--lime)" fill-opacity="0.09" />
+            <path d="M8 10 L12 14 L8 18" stroke="var(--lime)" stroke-width="1.5" stroke-linecap="round"
+              stroke-linejoin="round" />
+            <path d="M15 18 L20 18" stroke="var(--lime)" stroke-width="1.5" stroke-linecap="round" opacity="0.6" />
+          </svg>
+        </div>
+        <div class="brand-text">
+          <div class="brand-name">Compiler Playground</div>
+          <div class="brand-pipe">lexer · parser · semantic</div>
         </div>
       </div>
+      <div class="topbar-right">
+        <span class="kbd-hint">⌘ + ↵ to run</span>
 
-      <div class="panel-head" style="border-top:1px solid var(--border);">Symbol table (session)</div>
-      <div class="sym-wrap" id="symWrap">
-        <div class="sym-empty">No variables declared yet.</div>
-      </div>
-
-      <div class="actions">
-        <button class="btn-run" id="runBtn" onclick="runPipeline()">
-          <span id="runLabel">▶ Run</span>
+        <!-- ── Theme toggle ── -->
+        <button class="theme-toggle" id="themeToggle" title="Toggle light / dark mode" aria-label="Toggle colour theme">
+          <!-- Sun: visible in dark mode (click → go light) -->
+          <span class="t-icon t-sun">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="5" />
+              <line x1="12" y1="1" x2="12" y2="3" />
+              <line x1="12" y1="21" x2="12" y2="23" />
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+              <line x1="1" y1="12" x2="3" y2="12" />
+              <line x1="21" y1="12" x2="23" y2="12" />
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+            </svg>
+          </span>
+          <!-- Moon: visible in light mode (click → go dark) -->
+          <span class="t-icon t-moon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+            </svg>
+          </span>
         </button>
-        <button class="btn-reset" onclick="resetSession()">Reset session</button>
+
+        <div class="status-pill" id="serverPill">
+          <div class="dot"></div><span id="pillText">connecting…</span>
+        </div>
       </div>
     </div>
 
-    <!-- RIGHT -->
-    <div class="right">
+    <!-- MAIN -->
+    <div class="main">
 
-      <!-- pipeline bar -->
-      <div class="pipeline">
-        <div class="stage-node idle" id="pLex"><div class="dot"></div>Lexer</div>
-        <div class="pipe-arrow">›</div>
-        <div class="stage-node idle" id="pParse"><div class="dot"></div>Parser</div>
-        <div class="pipe-arrow">›</div>
-        <div class="stage-node idle" id="pSem"><div class="dot"></div>Semantic</div>
-      </div>
+      <!-- LEFT -->
+      <div class="left">
+        <div class="panel-label">
+          <span class="panel-label-text">Source code</span>
+        </div>
 
-      <!-- outputs -->
-      <div class="outputs" id="outputs">
-        <div class="placeholder">
-          Write a program (one statement per line), then click <span>▶ Run</span>.<br>
-          Your code is executed by the Python backend — <span>lexical_analyser.py</span>,
-          <span>parser.py</span>, <span>semantic_analyzer.py</span>.
+        <div class="editor-wrap">
+          <div class="gutter" id="gutter">
+            <div class="ln">1</div>
+          </div>
+          <textarea id="src" spellcheck="false"
+            placeholder="int x;&#10;string name;&#10;x = 5;&#10;name = &quot;alice&quot;;">int x;</textarea>
+        </div>
+
+        <div class="snips">
+          <div class="snips-header"><span class="snips-label">Snippets</span></div>
+          <div class="snips-grid">
+            <!-- Declarations -->
+            <span class="snip" onclick="snip('int x;')">int x;</span>
+            <span class="snip" onclick="snip('string name;')">string name;</span>
+            <!-- Assignment = -->
+            <span class="snip" onclick="snip('int x;\nx = 5;')">x = 5</span>
+            <span class="snip" onclick="snip('string s;\ns = &quot;hi&quot;;')">s = "hi"</span>
+            <!-- Arithmetic + -->
+            <span class="snip" onclick="snip('int x;\nx = 3 + 4;')">x = 3+4</span>
+            <!-- Arithmetic - -->
+            <span class="snip" onclick="snip('int x;\nx = 8 - 3;')">x = 8-3</span>
+            <!-- Arithmetic * -->
+            <span class="snip" onclick="snip('int x;\nx = 4 * 7;')">x = 4*7</span>
+            <!-- Chained -->
+            <span class="snip" onclick="snip('int x;\nx = 2 + 3 - 1;')">2+3-1</span>
+            <span class="snip" onclick="snip('int x;\nx = 2 * 3 + 4;')">2*3+4</span>
+            <!-- String + -->
+            <span class="snip" onclick="snip('string s;\ns = &quot;hello&quot; + &quot; world&quot;;')">str
+              concat</span>
+            <span class="snip"
+              onclick="snip('string a;\nstring b;\na = &quot;foo&quot;;\nb = &quot;bar&quot; + &quot;baz&quot;;')">2 str
+              vars</span>
+            <!-- Comparison > / if -->
+            <span class="snip" onclick="snip('int x;\nx = 5;\nif (x > 3) { x = 1; }')">if x &gt; 3</span>
+            <span class="snip" onclick="snip('int x;\nx = 0;\nif (x > 0) { x = 1; } else { x = 2; }')">if/else
+              &gt;</span>
+            <span class="snip" onclick="snip('int x;\nx = 10;\nif (x > 5) { x = x - 1; }')">x = x-1</span>
+            <span class="snip" onclick="snip('int x;\nx = 2;\nif (x > 1) { x = x * 3; }')">if x*3</span>
+            <!-- Full programs -->
+            <span class="snip" onclick="snip('int x;\nstring name;\nx = 11 + 7;\nname = &quot;GL4&quot;;')">full
+              prog</span>
+            <span class="snip" onclick="snip('int a;\nint b;\na = 3 * 2;\nb = a - 1;\nif (b > 4) { a = a + b; }')">multi
+              stmt</span>
+            <!-- Errors -->
+            <span class="snip err" onclick="snip('y = 10;')">⚠ undeclared</span>
+            <span class="snip err" onclick="snip('int x;\nx = &quot;oops&quot;;')">⚠ type mismatch</span>
+            <span class="snip err" onclick="snip('int x;\nx = 1 + &quot;bad&quot;;')">⚠ binop error</span>
+            <span class="snip err" onclick="snip('int x;\nint x;')">⚠ redeclare</span>
+          </div>
+        </div>
+
+        <div class="sym-section">
+          <div class="panel-label">
+            <span class="panel-label-text">Symbol table</span>
+            <span class="panel-label-badge" id="symCount">0 vars</span>
+          </div>
+          <div class="sym-scroll" id="symWrap">
+            <div class="sym-empty">No variables declared yet.</div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn-run" id="runBtn" onclick="runPipeline()">
+            <span id="runLabel">▶ Run</span>
+          </button>
+          <button class="btn-reset" onclick="resetSession()">Reset</button>
         </div>
       </div>
 
-      <!-- statusbar -->
-      <div class="statusbar">
-        <div class="sdot" id="sdot"></div>
-        <span id="stext">Idle...</span>
+      <!-- RIGHT -->
+      <div class="right">
+
+        <!-- pipeline bar -->
+        <div class="pipeline-wrap">
+          <div class="stage" id="pLex">
+            <div class="stage-num">01</div>
+            <div class="stage-label">Lexer</div>
+            <div class="stage-dot"></div>
+          </div>
+          <div class="pipe-connector">
+            <svg width="28" height="12" viewBox="0 0 28 12">
+              <path d="M0 6 H18 M18 6 L13 2 M18 6 L13 10" stroke="var(--dim)" stroke-width="1.2" stroke-linecap="round"
+                fill="none" />
+            </svg>
+          </div>
+          <div class="stage" id="pParse">
+            <div class="stage-num">02</div>
+            <div class="stage-label">Parser</div>
+            <div class="stage-dot"></div>
+          </div>
+          <div class="pipe-connector">
+            <svg width="28" height="12" viewBox="0 0 28 12">
+              <path d="M0 6 H18 M18 6 L13 2 M18 6 L13 10" stroke="var(--dim)" stroke-width="1.2" stroke-linecap="round"
+                fill="none" />
+            </svg>
+          </div>
+          <div class="stage" id="pSem">
+            <div class="stage-num">03</div>
+            <div class="stage-label">Semantic</div>
+            <div class="stage-dot"></div>
+          </div>
+        </div>
+
+        <!-- outputs -->
+        <div class="outputs" id="outputs">
+          <div class="placeholder">
+            Write code, then press <span class="hl">▶ Run</span> or <span class="hl">⌘ + ↵</span>.<br>
+            Your code passes through <span class="hl">lexical_analyser.py</span>,<br>
+            <span class="hl">parser.py</span>, and <span class="hl">semantic_analyzer.py</span>.
+            <br><br>
+            <span class="dim-txt">Try the snippets panel on the left →</span>
+          </div>
+        </div>
+
+        <!-- statusbar -->
+        <div class="statusbar">
+          <div class="sb-dot" id="sdot"></div>
+          <span id="stext">Idle</span>
+          <span class="sb-sep">·</span>
+          <span id="stiming" style="color:var(--dim)">—</span>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
-<script>
-const API = '/api';
+  <script>
+    const API = '/api';
+    let t0 = 0;
 
-// ── server ping ──
-async function ping() {
-  try {
-    const r = await fetch(API + '/status');
-    const d = await r.json();
-    if (d.ok) {
-      setPill('● connected', 'green');
-      renderSymTable(d.symbol_table);
+    /* ─── theme: init + toggle ─── */
+    (function initTheme() {
+      const saved = localStorage.getItem('cp-theme');
+      // Respect OS preference if no saved choice
+      const osPref = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', saved || osPref);
+      // Enable transitions AFTER first paint so there's no flash
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        document.body.classList.add('theme-ready');
+      }));
+    })();
+
+    document.getElementById('themeToggle').addEventListener('click', () => {
+      const html = document.documentElement;
+      const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      localStorage.setItem('cp-theme', next);
+    });
+
+    /* ─── server ping ─── */
+    async function ping() {
+      try {
+        const r = await fetch(API + '/status');
+        const d = await r.json();
+        if (d.ok) { setPill('connected', 'ok'); renderSymTable(d.symbol_table); }
+      } catch { setPill('offline', 'err'); }
     }
-  } catch {
-    setPill('● offline', 'red');
-  }
-}
-ping();
+    ping();
 
-function setPill(txt, cls) {
-  const p = document.getElementById('serverPill');
-  p.textContent = txt;
-  p.className = 'pill' + (cls ? ' ' + cls : '');
-}
-
-// ── line numbers ──
-const srcEl  = document.getElementById('src');
-const gutEl  = document.getElementById('gutter');
-
-function updateGutter() {
-  const lines = srcEl.value.split('\n').length;
-  gutEl.innerHTML = Array.from({length: lines}, (_,i) =>
-    `<div class="ln">${i+1}</div>`).join('');
-}
-srcEl.addEventListener('input', updateGutter);
-srcEl.addEventListener('keydown', e => { if(e.key==='Tab'){e.preventDefault();const s=srcEl.selectionStart;srcEl.value=srcEl.value.slice(0,s)+'  '+srcEl.value.slice(srcEl.selectionEnd);srcEl.selectionStart=srcEl.selectionEnd=s+2;updateGutter();} });
-updateGutter();
-
-// ── snippets ──
-function snip(code) {
-  srcEl.value = code;
-  updateGutter();
-  srcEl.focus();
-}
-
-// ── pipeline stages ──
-function setStage(id, state) {
-  document.getElementById(id).className = 'stage-node ' + (state || 'idle');
-}
-function resetStages() { ['pLex','pParse','pSem'].forEach(id => setStage(id, 'idle')); }
-
-// ── status bar ──
-function setStatus(state, txt) {
-  document.getElementById('sdot').className = 'sdot' + (state ? ' ' + state : '');
-  document.getElementById('stext').textContent = txt;
-}
-
-// ── symbol table ──
-function renderSymTable(tbl) {
-  const wrap = document.getElementById('symWrap');
-  const entries = Object.entries(tbl || {});
-  if (!entries.length) {
-    wrap.innerHTML = '<div class="sym-empty">No variables declared yet.</div>';
-    return;
-  }
-  let html = `<table class="sym-table">
-    <tr><th>Name</th><th>Type</th></tr>`;
-  for (const [name, type] of entries) {
-    html += `<tr class="sym-new"><td class="sym-name">${esc(name)}</td>
-      <td class="type-${type}">${esc(type)}</td></tr>`;
-  }
-  html += '</table>';
-  wrap.innerHTML = html;
-}
-
-// ── helpers ──
-function esc(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-// ── AST renderer ──
-function renderAST(node, depth = 0) {
-  if (!node) return '<span class="ast-val-str">null</span>';
-  const pad = depth > 0 ? `<div class="ast-branch">` : `<div>`;
-  const close = '</div>';
-
-  let out = pad;
-  out += `<span class="ast-kind">${esc(node.kind)}</span>`;
-
-  if (node.kind === 'Decl') {
-    out += `<div class="ast-branch">
-      <span class="ast-key">type:</span> <span class="ast-val-type">${esc(node.type)}</span><br>
-      <span class="ast-key">name:</span> <span class="ast-val-id">${esc(node.name)}</span>
-    </div>`;
-  } else if (node.kind === 'Assign') {
-    out += `<div class="ast-branch">
-      <span class="ast-key">name:</span> <span class="ast-val-id">${esc(node.name)}</span><br>
-      <span class="ast-key">expr:</span> ${renderAST(node.expr, depth+1)}
-    </div>`;
-  } else if (node.kind === 'BinOp') {
-    out += `<div class="ast-branch">
-      <span class="ast-key">op:</span> <span style="color:#a78bfa">${esc(node.op)}</span><br>
-      <span class="ast-key">left:</span> ${renderAST(node.left, depth+1)}<br>
-      <span class="ast-key">right:</span> ${renderAST(node.right, depth+1)}
-    </div>`;
-  } else if (node.kind === 'IfStmt') {
-    out += `<div class="ast-branch">
-      <span class="ast-key">cond:</span> ${renderAST(node.cond, depth+1)}<br>
-      <span class="ast-key">body:</span><br>${node.body.map(n => renderAST(n, depth+2)).join('<br>')}`;
-    if (node.else_body) {
-      out += `<br><span class="ast-key">else_body:</span><br>${node.else_body.map(n => renderAST(n, depth+2)).join('<br>')}`;
+    function setPill(txt, cls) {
+      document.getElementById('pillText').textContent = txt;
+      document.getElementById('serverPill').className = 'status-pill' + (cls ? ' ' + cls : '');
     }
-    out += `</div>`;
-  } else if (node.kind === 'Num') {
-    out += ` <span class="ast-val-num">(${node.value})</span>`;
-  } else if (node.kind === 'Str') {
-    out += ` <span class="ast-val-str">("${esc(node.value)}")</span>`;
-  } else if (node.kind === 'Id') {
-    out += ` <span class="ast-val-id">(${esc(node.name)})</span>`;
-  }
 
-  out += close;
-  return out;
-}
+    /* ─── line numbers ─── */
+    const srcEl = document.getElementById('src');
+    const gutEl = document.getElementById('gutter');
+    function updateGutter() {
+      const n = srcEl.value.split('\n').length;
+      gutEl.innerHTML = Array.from({ length: n }, (_, i) => `<div class="ln">${i + 1}</div>`).join('');
+    }
+    srcEl.addEventListener('input', updateGutter);
+    srcEl.addEventListener('keydown', e => {
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        const s = srcEl.selectionStart;
+        srcEl.value = srcEl.value.slice(0, s) + '  ' + srcEl.value.slice(srcEl.selectionEnd);
+        srcEl.selectionStart = srcEl.selectionEnd = s + 2;
+        updateGutter();
+      }
+    });
+    updateGutter();
 
-function getProgramLines(source) {
-  const lines = source.split('\n');
-  const program = [];
+    /* ─── snippets ─── */
+    function snip(code) { srcEl.value = code; updateGutter(); srcEl.focus(); }
 
-  for (let i = 0; i < lines.length; i++) {
-    const raw = lines[i];
-    const text = raw.trim();
-    if (!text) continue;
-    program.push({ lineNumber: i + 1, source: text });
-  }
+    /* ─── stages ─── */
+    function setStage(id, state) { document.getElementById(id).className = 'stage ' + (state || ''); }
+    function resetStages() { ['pLex', 'pParse', 'pSem'].forEach(id => setStage(id, '')); }
 
-  return program;
-}
+    /* ─── statusbar ─── */
+    function setStatus(state, txt) {
+      document.getElementById('sdot').className = 'sb-dot' + (state ? ' ' + state : '');
+      document.getElementById('stext').textContent = txt;
+    }
+    function setTiming(ms) {
+      document.getElementById('stiming').textContent = ms !== null ? ms + ' ms' : '—';
+    }
 
-function appendStageCard(out, stageName, color, title, bodyHtml) {
-  const card = document.createElement('div');
-  card.className = 'card';
-  card.innerHTML = `
-    <div class="card-head" style="color:${color}">
-      <div class="cdot" style="background:${color}"></div>${title}
-      <span style="color:var(--muted);font-weight:400;margin-left:auto">${stageName}</span>
+    /* ─── symbol table ─── */
+    function renderSymTable(tbl) {
+      const wrap = document.getElementById('symWrap');
+      const entries = Object.entries(tbl || {});
+      document.getElementById('symCount').textContent = entries.length + ' var' + (entries.length !== 1 ? 's' : '');
+      if (!entries.length) { wrap.innerHTML = '<div class="sym-empty">No variables declared yet.</div>'; return; }
+      let html = `<table class="sym-table"><tr><th>Name</th><th>Type</th></tr>`;
+      for (const [name, type] of entries)
+        html += `<tr class="sym-new"><td class="sym-name">${esc(name)}</td><td class="sym-type-${type}">${esc(type)}</td></tr>`;
+      html += '</table>';
+      wrap.innerHTML = html;
+    }
+
+    /* ─── helpers ─── */
+    function esc(s) {
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    /* ─── AST renderer ─── */
+    function renderAST(node, depth = 0) {
+      if (!node) return '<span class="ast-val-str">null</span>';
+      const wrap = depth > 0 ? `<div class="ast-branch">` : `<div>`;
+      let out = wrap;
+      out += `<span class="ast-kind">${esc(node.kind)}</span>`;
+      if (node.kind === 'Decl') {
+        out += `<div class="ast-branch"><span class="ast-key">type:</span> <span class="ast-val-type">${esc(node.type)}</span><br><span class="ast-key">name:</span> <span class="ast-val-id">${esc(node.name)}</span></div>`;
+      } else if (node.kind === 'Assign') {
+        out += `<div class="ast-branch"><span class="ast-key">name:</span> <span class="ast-val-id">${esc(node.name)}</span><br><span class="ast-key">expr:</span> ${renderAST(node.expr, depth + 1)}</div>`;
+      } else if (node.kind === 'BinOp') {
+        out += `<div class="ast-branch"><span class="ast-key">op:</span> <span style="color:var(--pink)">${esc(node.op)}</span><br><span class="ast-key">left:</span> ${renderAST(node.left, depth + 1)}<br><span class="ast-key">right:</span> ${renderAST(node.right, depth + 1)}</div>`;
+      } else if (node.kind === 'IfStmt') {
+        out += `<div class="ast-branch"><span class="ast-key">cond:</span> ${renderAST(node.cond, depth + 1)}<br><span class="ast-key">body:</span><br>${node.body.map(n => renderAST(n, depth + 2)).join('<br>')}`;
+        if (node.else_body) out += `<br><span class="ast-key">else:</span><br>${node.else_body.map(n => renderAST(n, depth + 2)).join('<br>')}`;
+        out += `</div>`;
+      } else if (node.kind === 'Num') {
+        out += ` <span class="ast-val-num">(${node.value})</span>`;
+      } else if (node.kind === 'Str') {
+        out += ` <span class="ast-val-str">("${esc(node.value)}")</span>`;
+      } else if (node.kind === 'Id') {
+        out += ` <span class="ast-val-id">(${esc(node.name)})</span>`;
+      }
+      out += '</div>';
+      return out;
+    }
+
+    /* ─── card builder ─── */
+    function appendCard(out, stageNum, accentColor, title, bodyHtml) {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+    <div class="card-head">
+      <div class="card-stage-badge" style="color:${accentColor};border-color:${accentColor}44;background:${accentColor}14">${stageNum}</div>
+      <div class="card-title" style="color:${accentColor}">${title}</div>
     </div>
     <div class="card-body">${bodyHtml}</div>`;
-  out.appendChild(card);
-}
+      out.appendChild(card);
+    }
 
-// ── main run ──
-async function runPipeline() {
-  const source = srcEl.value.trim();
-  if (!source) return;
+    /* ─── main run ─── */
+    async function runPipeline() {
+      const source = srcEl.value.trim();
+      if (!source) return;
 
-  const btn = document.getElementById('runBtn');
-  const lbl = document.getElementById('runLabel');
-  btn.disabled = true;
-  lbl.innerHTML = '<span class="spin"></span> Analyzing...';
+      const btn = document.getElementById('runBtn');
+      btn.disabled = true;
+      document.getElementById('runLabel').innerHTML = '<span class="spin"></span>';
+      setStatus('busy', 'Sending to Python backend…');
+      setTiming(null);
+      resetStages();
+      document.getElementById('outputs').innerHTML = '';
+      t0 = performance.now();
 
-  setStatus('busy', 'Sending code to Python backend...');
-  resetStages();
-  const out = document.getElementById('outputs');
-  out.innerHTML = '';
+      let data;
+      try {
+        const res = await fetch(API + '/run', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ source })
+        });
+        data = await res.json();
+      } catch {
+        setStatus('err', 'Server unreachable');
+        setPill('offline', 'err');
+        done(false, 'Server unreachable');
+        return;
+      }
 
-  let data;
-  try {
-    const res = await fetch(API + '/run', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({source: source})
-    });
-    data = await res.json();
-  } catch(e) {
-    setStatus('err', 'Could not reach Python server.');
-    setPill('● offline', 'red');
-    done(false, 'Server unavailable');
-    return;
-  }
+      const elapsed = Math.round(performance.now() - t0);
+      const s = data.stages || {};
+      const out = document.getElementById('outputs');
 
-  const s = data.stages || {};
-  const prefix = 'Program';
-
-  if (s.lexer) {
-    setStage('pLex', s.lexer.ok ? 'ok' : 'err');
-    if (s.lexer.ok) {
-      const chips = s.lexer.tokens.map((t, k) =>
-        `<div class="tok" style="animation-delay:${k*15}ms">
+      if (s.lexer) {
+        setStage('pLex', s.lexer.ok ? 'ok' : 'err');
+        if (s.lexer.ok) {
+          const chips = s.lexer.tokens.map((t, k) =>
+            `<div class="tok" style="animation-delay:${k * 12}ms">
           <div class="tt ${t.type}">${t.type}</div>
-          <div class="tv">${t.type==='STRING' ? '"'+esc(t.value)+'"' : esc(String(t.value))}</div>
-        </div>`
-      ).join('');
-      appendStageCard(out, prefix, 'var(--blue)', 'Stage 1 — Lexer', `<div class="tok-row" style="padding:0">${chips}</div>`);
-    } else {
-      appendStageCard(out, prefix, 'var(--red)', 'Stage 1 — Lexer Error', `<div class="err-msg">${esc(s.lexer.error)}</div>`);
-      done(false, `${prefix} — ${s.lexer.error}`);
-      return;
-    }
-  }
+          <div class="tv">${t.type === 'STRING' ? '"' + esc(t.value) + '"' : esc(String(t.value))}</div>
+        </div>`).join('');
+          appendCard(out, 'LEXER', 'var(--blue)', 'Stage 1 — Tokens', `<div class="tok-row">${chips}</div>`);
+        } else {
+          appendCard(out, 'LEXER', 'var(--red)', 'Lexer Error', `<div class="err-block">${esc(s.lexer.error)}</div>`);
+          done(false, s.lexer.error, elapsed); return;
+        }
+      }
 
-  if (s.parser) {
-    setStage('pParse', s.parser.ok ? 'ok' : 'err');
-    if (s.parser.ok) {
-      const parserAst = Array.isArray(s.parser.ast) ? s.parser.ast : (s.parser.ast ? [s.parser.ast] : []);
-      const astHtml = parserAst.map(n => renderAST(n)).join('<br>');
-      appendStageCard(
-        out,
-        prefix,
-        'var(--amber)',
-        'Stage 2 — AST (Abstract Syntax Tree)',
-        `<div class="ast-tree">${astHtml}</div>`
-      );
-    } else {
-      appendStageCard(out, prefix, 'var(--red)', 'Stage 2 — Parser Error', `<div class="err-msg">${esc(s.parser.error)}</div>`);
-      done(false, `${prefix} — ${s.parser.error}`);
-      return;
-    }
-  }
+      if (s.parser) {
+        setStage('pParse', s.parser.ok ? 'ok' : 'err');
+        if (s.parser.ok) {
+          const nodes = Array.isArray(s.parser.ast) ? s.parser.ast : (s.parser.ast ? [s.parser.ast] : []);
+          appendCard(out, 'PARSER', 'var(--amber)', 'Stage 2 — Abstract Syntax Tree',
+            `<div class="ast-tree">${nodes.map(n => renderAST(n)).join('<br>')}</div>`);
+        } else {
+          appendCard(out, 'PARSER', 'var(--red)', 'Parser Error', `<div class="err-block">${esc(s.parser.error)}</div>`);
+          done(false, s.parser.error, elapsed); return;
+        }
+      }
 
-  if (s.semantic) {
-    setStage('pSem', s.semantic.ok ? 'ok' : 'err');
-    if (s.semantic.ok) {
-      const tc = s.semantic.type === 'int' ? 'int' : 'string';
-      appendStageCard(
-        out,
-        prefix,
-        'var(--green)',
-        'Stage 3 — Semantic Analysis',
-        `<div class="result-row">
+      if (s.semantic) {
+        setStage('pSem', s.semantic.ok ? 'ok' : 'err');
+        if (s.semantic.ok) {
+          const tc = s.semantic.type === 'int' ? 'int' : 'string';
+          appendCard(out, 'SEM', 'var(--green)', 'Stage 3 — Semantic Analysis',
+            `<div class="sem-result">
           <div>
-            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px;">Last Inferred type</div>
-            <div class="type-badge ${s.semantic.type ? tc : 'none'}">${s.semantic.type ? esc(s.semantic.type) : 'None'}</div>
+            <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;font-family:var(--sans);">Inferred type</div>
+            <div class="type-chip ${s.semantic.type ? tc : 'int'}">${s.semantic.type ? esc(s.semantic.type) : '—'}</div>
           </div>
-          <div class="ok-msg">✓ Program is semantically valid.</div>
-        </div>`
-      );
-      renderSymTable(s.semantic.symbol_table);
-    } else {
-      appendStageCard(out, prefix, 'var(--red)', 'Stage 3 — Semantic Error', `<div class="err-msg">${esc(s.semantic.error)}</div>`);
-      renderSymTable(s.semantic.symbol_table || {});
-      done(false, `${prefix} — ${s.semantic.error}`);
-      return;
+          <div class="ok-bar">Program is semantically valid</div>
+        </div>`);
+          renderSymTable(s.semantic.symbol_table);
+        } else {
+          appendCard(out, 'SEM', 'var(--red)', 'Semantic Error', `<div class="err-block">${esc(s.semantic.error)}</div>`);
+          renderSymTable(s.semantic.symbol_table || {});
+          done(false, s.semantic.error, elapsed); return;
+        }
+      }
+
+      done(true, 'Valid program', elapsed);
     }
-  }
 
-  done(true, 'OK — valid program');
-}
+    function done(ok, msg, ms) {
+      document.getElementById('runBtn').disabled = false;
+      document.getElementById('runLabel').textContent = '▶ Run';
+      setStatus(ok ? 'ok' : 'err', msg || '');
+      if (ms != null) setTiming(ms);
+    }
 
-function done(ok, msg) {
-  const btn = document.getElementById('runBtn');
-  btn.disabled = false;
-  document.getElementById('runLabel').textContent = '▶ Run';
-  setStatus(ok ? 'ok' : 'err', msg || '');
-}
+    /* ─── reset ─── */
+    async function resetSession() {
+      try {
+        await fetch(API + '/reset', { method: 'POST' });
+        renderSymTable({});
+        document.getElementById('outputs').innerHTML = `<div class="placeholder">Session reset — symbol table cleared.<br><span class="dim-txt">You can redeclare your variables.</span></div>`;
+        resetStages();
+        setStatus('', 'Session reset');
+        setTiming(null);
+      } catch { setStatus('err', 'Server unreachable'); }
+    }
 
-function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
-
-// ── reset ──
-async function resetSession() {
-  try {
-    const r = await fetch(API + '/reset', {method:'POST'});
-    const d = await r.json();
-    renderSymTable({});
-    document.getElementById('outputs').innerHTML = `
-      <div class="placeholder">Session reset. The symbol table is now empty.<br>
-      You can redeclare your variables.</div>`;
-    resetStages();
-    setStatus('', 'Session reset');
-  } catch {
-    setStatus('err', 'Could not reach server');
-  }
-}
-
-// ── keyboard shortcut ──
-document.addEventListener('keydown', e => {
-  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); runPipeline(); }
-});
-</script>
+    /* ─── keyboard ─── */
+    document.addEventListener('keydown', e => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); runPipeline(); }
+    });
+  </script>
 </body>
+
 </html>
