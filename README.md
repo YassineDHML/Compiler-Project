@@ -14,7 +14,7 @@ It demonstrates the three core compilation phases:
 This project parses and validates multi-statement programs:
 - Variable declarations (e.g., `int x;`, `string name;`)
 - Assignments (e.g., `x = 10;`, `name = "yassine";`)
-- `+`, `-`, `*`, `>` expressions with type consistency checks
+- `+`, `-`, `*`, `>`, `<` expressions with type consistency checks
 - Support for `if` / `else` blocks with braces and parenthesized conditions.
 
 The web app (`start.py` + `index.html`) visualizes each stage and keeps a session symbol table.
