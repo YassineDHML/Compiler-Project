@@ -7,7 +7,7 @@ TOKEN_SPEC = [
     ('STRING',   r'"[^"]*"'),
     ('ID',       r'[a-zA-Z_]\w*'),
     ('NUM',      r'\d+'),
-    ('OP',       r'[=+\-*>]'),
+    ('OP',       r'[=+\-*><]'),
     ('LPAREN',   r'\('),
     ('RPAREN',   r'\)'),
     ('LBRACE',   r'\{'),

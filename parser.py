@@ -156,13 +156,13 @@ class Parser:
     # expr → term expr'
     def expr(self):
         node = self.term()
-        while self.current() and self.current().value in ('+', '-', '*', '>'):
+        while self.current() and self.current().value in ('+', '-', '*', '>', '<'):
             op    = self.eat('OP').value
             right = self.term()
             node  = BinOp(node, op, right)
         return node
 
-    # term → ID | NUM | STRING
+    # term → ID | NUM | STRING | '(' expr ')'
     def term(self):
         tok = self.current()
         if tok.type == 'NUM':
@@ -174,6 +174,11 @@ class Parser:
         elif tok.type == 'STRING':
             self.eat('STRING')
             return Str(tok.value)
+        elif tok.type == 'LPAREN':
+            self.eat('LPAREN')
+            node = self.expr()
+            self.eat('RPAREN')
+            return node
         else:
             raise SyntaxError("Invalid term")
 

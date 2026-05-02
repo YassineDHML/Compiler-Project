@@ -38,7 +38,7 @@ expr    → term (OP term)*
 
 term    → ID | NUM | STRING
 
-OP      → '+' | '-' | '*' | '>'
+OP      → '+' | '-' | '*' | '>' | '<'
 
 TYPE    → 'int' | 'string'
 ```
