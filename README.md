@@ -65,7 +65,7 @@ TYPE    → 'int' | 'string'
 ## Project Structure
 
 ```text
-MOMA_compiler-/
+Compiler-Project/
 ├── lexical_analyser.py   # Lexer
 ├── parser.py             # Parser + AST nodes
 ├── semantic_analyzer.py  # Semantic analyzer + symbol table
